@@ -1,0 +1,67 @@
+syntax = "proto3";
+
+package jackpot;
+
+service JackpotService {
+  rpc CreateJackpot (CreateJackpotRequest) returns (CreateJackpotResponse) {}
+  rpc AddJackpotAmount (AddJackpotAmountRequest) returns (AddJackpotAmountResponse) {}
+  rpc RunJackpot (RunJackpotRequest) returns (RunJackpotResponse) {}
+  rpc StopActiveJackpot (StopActiveJackpotRequest) returns (StopActiveJackpotResponse) {}
+  rpc DeleteJackpot (DeleteJackpotRequest) returns (DeleteJackpotResponse) {}
+  rpc WithdrawFromJackpot (WithdrawFromJackpotRequest) returns (WithdrawFromJackpotResponse) {}
+}
+
+message CreateJackpotRequest {
+}
+
+message CreateJackpotResponse {
+  int32 status = 1;
+  repeated string error = 2;
+  int32 id = 3;
+}
+
+message AddJackpotAmountRequest {
+  int32 id = 1;
+  int32 amount = 2;
+}
+
+message AddJackpotAmountResponse {
+  int32 status = 1;
+  repeated string error = 2;
+}
+
+message RunJackpotRequest {
+  int32 id = 1;
+}
+
+message RunJackpotResponse {
+  int32 status = 1;
+  repeated string error = 2;
+}
+
+message StopActiveJackpotRequest {
+}
+
+message StopActiveJackpotResponse {
+  int32 status = 1;
+  repeated string error = 2;
+}
+
+message DeleteJackpotRequest {
+  int32 id = 1;
+}
+
+message DeleteJackpotResponse {
+  int32 status = 1;
+  repeated string error = 2;
+}
+
+message WithdrawFromJackpotRequest {
+  int32 id = 1;
+  int32 amount = 2;
+}
+
+message WithdrawFromJackpotResponse {
+  int32 status = 1;
+  repeated string error = 2;
+}
