@@ -12,7 +12,7 @@ message UsersData {
   string role = 3;
 }
 
-// get User Info
+// get Users Info
 message ListAllUsersRequest {
 }
 
@@ -20,5 +20,18 @@ message ListAllUsersResponse {
   int32 status = 1;
   repeated string error = 2;
   repeated UsersData data = 3;
+}
+
+// get User Info
+message CreateUserRequest {
+  string email = 1;
+  string password = 2;
+  string role = 3;
+}
+
+message CreateUserResponse {
+  int32 status = 1;
+  repeated string error = 2;
+  int32 id = 3;
 }
 

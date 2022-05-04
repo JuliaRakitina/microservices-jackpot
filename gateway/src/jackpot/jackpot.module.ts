@@ -1,7 +1,22 @@
 import { Module } from '@nestjs/common';
+import { ClientsModule, Transport } from '@nestjs/microservices';
+import { JACKPOT_PACKAGE_NAME, JACKPOT_SERVICE_NAME } from './jackpot.pb';
 import { JackpotController } from './jackpot.controller';
 
 @Module({
-  controllers: [JackpotController]
+  imports: [
+    ClientsModule.register([
+      {
+        name: JACKPOT_SERVICE_NAME,
+        transport: Transport.GRPC,
+        options: {
+          url: '0.0.0.0:50053',
+          package: JACKPOT_PACKAGE_NAME,
+          protoPath: 'node_modules/rp-proto/proto/jackpot.proto',
+        },
+      },
+    ]),
+  ],
+  controllers: [JackpotController],
 })
 export class JackpotModule {}

@@ -1,6 +1,6 @@
 /* eslint-disable */
 import { GrpcMethod, GrpcStreamMethod } from '@nestjs/microservices';
-import * as Long from 'long';
+import Long from 'long';
 import * as _m0 from 'protobufjs/minimal';
 import { Observable } from 'rxjs';
 
@@ -12,13 +12,26 @@ export interface UsersData {
   role: string;
 }
 
-/** get User Info */
+/** get Users Info */
 export interface ListAllUsersRequest {}
 
 export interface ListAllUsersResponse {
   status: number;
   error: string[];
   data: UsersData[];
+}
+
+/** get User Info */
+export interface CreateUserRequest {
+  email: string;
+  password: string;
+  role: string;
+}
+
+export interface CreateUserResponse {
+  status: number;
+  error: string[];
+  id: number;
 }
 
 export const USER_PACKAGE_NAME = 'user';
@@ -67,8 +80,6 @@ export function UserServiceControllerMethods() {
 
 export const USER_SERVICE_NAME = 'UserService';
 
-// If you get a compile-error about 'Constructor<Long> and ... have no overlap',
-// add '--ts_proto_opt=esModuleInterop=true' as a flag when calling 'protoc'.
 if (_m0.util.Long !== Long) {
   _m0.util.Long = Long as any;
   _m0.configure();
