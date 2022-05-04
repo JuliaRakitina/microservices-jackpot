@@ -18,7 +18,7 @@ export class RegisterRequestDto implements RegisterRequest {
   public readonly password: string;
 
   @IsString()
-  public readonly role: string;
+  public readonly role: 'admin' | 'player';
 }
 
 export class ValidateRequestDto implements ValidateRequest {
