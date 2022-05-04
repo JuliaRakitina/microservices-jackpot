@@ -39,6 +39,7 @@ export interface ValidateResponse {
   status: number;
   error: string[];
   userId: number;
+  role: string;
 }
 
 export const AUTH_PACKAGE_NAME = 'auth';

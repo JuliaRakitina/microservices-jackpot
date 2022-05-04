@@ -82,6 +82,7 @@ export class AuthService {
         status: HttpStatus.FORBIDDEN,
         error: ['Token is invalid'],
         userId: null,
+        role: null,
       };
     }
 
@@ -92,9 +93,15 @@ export class AuthService {
         status: HttpStatus.CONFLICT,
         error: ['User not found'],
         userId: null,
+        role: null,
       };
     }
 
-    return { status: HttpStatus.OK, error: null, userId: decoded.id };
+    return {
+      status: HttpStatus.OK,
+      error: null,
+      userId: decoded.id,
+      role: auth.role,
+    };
   }
 }

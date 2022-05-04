@@ -41,4 +41,5 @@ message ValidateResponse {
   int32 status = 1;
   repeated string error = 2;
   int32 userId = 3;
+  string role = 4;
 }

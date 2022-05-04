@@ -39,7 +39,7 @@ export class UpdateUserBalanceRequestDto implements UpdateUserBalanceRequest {
   public readonly amount: number;
 }
 
-export class DeleteRequestDto implements DeleteUserRequest {
+export class DeleteUserRequestDto implements DeleteUserRequest {
   @IsNumber()
   @IsNotEmpty()
   public readonly userId: number;

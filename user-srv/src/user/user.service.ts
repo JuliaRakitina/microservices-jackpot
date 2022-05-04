@@ -1,16 +1,18 @@
 import { HttpStatus, Injectable } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
-import { User } from './entity/user.entity';
+import { User } from './user.entity';
 import {
   CreateUserRequest,
   CreateUserResponse,
+  DeleteUserRequest,
   GetUserByUserIdRequest,
   GetUserByUserIdResponse,
   UpdateUserBalanceRequest,
   UpdateUserBalanceResponse,
   UserData,
 } from './user.pb';
+import { DeleteUserRequestDto } from './user.dto';
 
 @Injectable()
 export class UserService {
@@ -45,6 +47,31 @@ export class UserService {
     await this.repository.save(user);
 
     return { id: user.id, error: null, status: HttpStatus.OK };
+  }
+
+  public async deleteUser({
+    userId,
+  }: DeleteUserRequestDto): Promise<DeleteUserRequest> {
+    const user: User = await this.repository.findOne({ where: { userId } });
+
+    if (!user) {
+      return {
+        userId: undefined,
+        error: ['User not found'],
+        status: HttpStatus.NOT_FOUND,
+      };
+    }
+    if (user.balance > 0) {
+      return {
+        userId: undefined,
+        error: ['Cant delete user with not 0 balance'],
+        status: HttpStatus.CONFLICT,
+      };
+    }
+
+    await this.repository.remove(user);
+
+    return { userId: user.id, error: null, status: HttpStatus.OK };
   }
 
   public async updateUserBalance({
