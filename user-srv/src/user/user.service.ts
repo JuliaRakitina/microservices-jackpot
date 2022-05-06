@@ -6,8 +6,10 @@ import {
   CreateUserRequest,
   CreateUserResponse,
   DeleteUserRequest,
+  DeleteUserResponse,
   GetUserByUserIdRequest,
   GetUserByUserIdResponse,
+  ListAllUsersResponse,
   UpdateUserBalanceRequest,
   UpdateUserBalanceResponse,
   UserData,
@@ -39,7 +41,6 @@ export class UserService {
     payload: CreateUserRequest,
   ): Promise<CreateUserResponse> {
     const user: User = new User();
-
     user.email = payload.email;
     user.userId = payload.userId;
     user.role = payload.role;
@@ -49,21 +50,17 @@ export class UserService {
     return { id: user.id, error: null, status: HttpStatus.OK };
   }
 
-  public async deleteUser({
-    userId,
-  }: DeleteUserRequestDto): Promise<DeleteUserRequest> {
+  public async deleteUser(userId: number): Promise<DeleteUserResponse> {
     const user: User = await this.repository.findOne({ where: { userId } });
 
     if (!user) {
       return {
-        userId: undefined,
         error: ['User not found'],
         status: HttpStatus.NOT_FOUND,
       };
     }
     if (user.balance > 0) {
       return {
-        userId: undefined,
         error: ['Cant delete user with not 0 balance'],
         status: HttpStatus.CONFLICT,
       };
@@ -71,7 +68,7 @@ export class UserService {
 
     await this.repository.remove(user);
 
-    return { userId: user.id, error: null, status: HttpStatus.OK };
+    return { error: null, status: HttpStatus.OK };
   }
 
   public async updateUserBalance({
@@ -105,5 +102,10 @@ export class UserService {
       error: null,
       status: HttpStatus.OK,
     };
+  }
+
+  public async listAllUsers(): Promise<ListAllUsersResponse> {
+    const users: User[] = await this.repository.find();
+    return { data: users as UserData[], error: null, status: HttpStatus.OK };
   }
 }

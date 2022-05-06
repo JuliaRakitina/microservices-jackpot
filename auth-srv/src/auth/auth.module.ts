@@ -6,6 +6,8 @@ import { Auth } from './auth.entity';
 import { AuthService } from './service/auth.service';
 import { JwtService } from './service/jwt.service';
 import { JwtStrategy } from './strategy/jwt.strategy';
+import { ClientsModule, Transport } from '@nestjs/microservices';
+import { USER_SERVICE_NAME, USER_PACKAGE_NAME } from './proto/user.pb';
 
 @Module({
   imports: [
@@ -13,6 +15,17 @@ import { JwtStrategy } from './strategy/jwt.strategy';
       secret: 'red',
       signOptions: { expiresIn: '20d' },
     }),
+    ClientsModule.register([
+      {
+        name: USER_SERVICE_NAME,
+        transport: Transport.GRPC,
+        options: {
+          url: 'red-pocket-user-srv:50053',
+          package: USER_PACKAGE_NAME,
+          protoPath: 'node_modules/rp-proto/proto/user.proto',
+        },
+      },
+    ]),
     TypeOrmModule.forFeature([Auth]),
   ],
   controllers: [AuthController],

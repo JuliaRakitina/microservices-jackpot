@@ -1,4 +1,4 @@
-import { HttpStatus, Inject, Injectable } from '@nestjs/common';
+import { HttpStatus, Inject, Injectable, OnModuleInit } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 import { JwtService } from './jwt.service';
@@ -8,15 +8,30 @@ import {
   ValidateRequestDto,
 } from '../auth.dto';
 import { Auth } from '../auth.entity';
-import { LoginResponse, RegisterResponse, ValidateResponse } from '../auth.pb';
+import {
+  LoginResponse,
+  RegisterResponse,
+  ValidateResponse,
+} from '../proto/auth.pb';
+import { USER_SERVICE_NAME, UserServiceClient } from '../proto/user.pb';
+import { ClientGrpc } from '@nestjs/microservices';
 
 @Injectable()
-export class AuthService {
+export class AuthService implements OnModuleInit {
   @InjectRepository(Auth)
   private readonly repository: Repository<Auth>;
 
   @Inject(JwtService)
   private readonly jwtService: JwtService;
+
+  private userSvc: UserServiceClient;
+
+  @Inject(USER_SERVICE_NAME)
+  private readonly client: ClientGrpc;
+
+  public onModuleInit(): void {
+    this.userSvc = this.client.getService<UserServiceClient>(USER_SERVICE_NAME);
+  }
 
   public async register({
     email,
@@ -35,7 +50,13 @@ export class AuthService {
     auth.password = this.jwtService.encodePassword(password);
     auth.role = role;
 
-    await this.repository.save(auth);
+    const { id } = await this.repository.save(auth);
+    const data = {
+      email,
+      userId: id,
+      role,
+    };
+    await this.userSvc.createUser(data);
 
     return { status: HttpStatus.CREATED, error: null };
   }

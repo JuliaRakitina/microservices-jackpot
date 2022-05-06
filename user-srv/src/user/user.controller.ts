@@ -2,9 +2,7 @@ import { Controller, Inject } from '@nestjs/common';
 import { GrpcMethod } from '@nestjs/microservices';
 import { UserService } from './user.service';
 import {
-  CreateUserRequest,
   CreateUserResponse,
-  DeleteUserRequest,
   DeleteUserResponse,
   UpdateUserBalanceRequest,
   UpdateUserBalanceResponse,
@@ -36,9 +34,14 @@ export class UserController {
   }
 
   @GrpcMethod(USER_SERVICE_NAME, 'DeleteUser')
-  private deleteUser(
-    payload: DeleteUserRequestDto,
-  ): Promise<DeleteUserResponse> {
-    return this.service.deleteUser(payload);
+  private deleteUser({
+    userId,
+  }: DeleteUserRequestDto): Promise<DeleteUserResponse> {
+    return this.service.deleteUser(userId);
+  }
+
+  @GrpcMethod(USER_SERVICE_NAME, 'ListAllUsers')
+  private listAllUsers(): Promise<DeleteUserResponse> {
+    return this.service.listAllUsers();
   }
 }

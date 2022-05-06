@@ -10,7 +10,7 @@ import { UserController } from './user.controller';
         name: USER_SERVICE_NAME,
         transport: Transport.GRPC,
         options: {
-          url: '0.0.0.0:50052',
+          url: 'red-pocket-user-srv:50053',
           package: USER_PACKAGE_NAME,
           protoPath: 'node_modules/rp-proto/proto/user.proto',
         },

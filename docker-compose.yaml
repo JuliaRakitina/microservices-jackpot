@@ -1,0 +1,133 @@
+version: '3.7'
+
+networks:
+  red-pocket-dev:
+    driver: bridge
+
+services:
+  red-pocket-auth-srv:
+    container_name: red-pocket-auth-srv
+    build:
+      context: .
+      dockerfile: auth-srv/Dockerfile
+      network: host
+    environment:
+      - NODE_ENV=dev
+    command: npm run start:dev
+    env_file:
+      - .env
+    ports:
+      - ${AUTH_APP_PORT}:${AUTH_APP_PORT}
+    volumes:
+      - ./auth-srv:/app
+      - ./rp-proto:/app/rp-proto
+      - /app/dist
+      - /app/node_modules
+      - npm-cache:/root/.npm
+      - ts-cache:/root/.ts-node
+    working_dir: /app
+    networks:
+      - red-pocket-dev
+    depends_on:
+      - red-pocket-postgres
+
+  red-pocket-gateway:
+    container_name: red-pocket-gateway
+    build:
+      context: .
+      dockerfile: gateway/Dockerfile
+      network: host
+    environment:
+      - NODE_ENV=dev
+    command: npm run start:dev
+    env_file:
+      - .env
+    ports:
+      - ${GATEWAY_APP_PORT}:${GATEWAY_APP_PORT}
+    volumes:
+      - ./gateway:/app
+      - ./rp-proto:/app/rp-proto
+      - /app/dist
+      - /app/node_modules
+      - npm-cache:/root/.npm
+      - ts-cache:/root/.ts-node
+    working_dir: /app
+    networks:
+      - red-pocket-dev
+
+  red-pocket-user-srv:
+    container_name: red-pocket-user-srv
+    build:
+      context: .
+      dockerfile: user-srv/Dockerfile
+      network: host
+    environment:
+      - NODE_ENV=dev
+    command: npm run start:dev
+    env_file:
+      - .env
+    ports:
+      - ${USER_APP_PORT}:${USER_APP_PORT}
+    volumes:
+      - ./user-srv:/app
+      - ./rp-proto:/app/rp-proto
+      - /app/dist
+      - /app/node_modules
+      - npm-cache:/root/.npm
+      - ts-cache:/root/.ts-node
+    working_dir: /app
+    networks:
+      - red-pocket-dev
+    depends_on:
+      - red-pocket-postgres
+
+#  red-pocket-jackpot-srv:
+#    container_name: red-pocket-jackpot-srv
+#    build:
+#      context: .
+#      dockerfile: jackpot-srv/Dockerfile
+#      network: host
+#    environment:
+#      - NODE_ENV=dev
+#    command: npm run start:dev
+#    env_file:
+#      - .env
+#    ports:
+#      - ${JACKPOT_APP_PORT}:${JACKPOT_APP_PORT}
+#    volumes:
+#      - ./jackpot-srv:/app
+#      - ./rp-proto:/app/rp-proto
+#      - /app/dist
+#      - /app/node_modules
+#      - npm-cache:/root/.npm
+#      - ts-cache:/root/.ts-node
+#    working_dir: /app
+#    networks:
+#      - red-pocket-dev
+#    depends_on:
+#      - red-pocket-postgres
+
+  red-pocket-postgres:
+    container_name: red-pocket-postgres
+    image: postgres:13
+    restart: always
+    environment:
+      PGDATA: /var/lib/postgresql/data
+      POSTGRES_USER: ${DB_USER}
+      POSTGRES_PASSWORD: ${DB_PASSWORD}
+    ports:
+      - ${DB_OUT_PORT}:${DB_PORT}
+    volumes:
+      - postgres:/var/lib/postgresql/data
+      - ./docker_postgres_init.sql:/docker-entrypoint-initdb.d/docker_postgres_init.sql
+      - ./docker_postgres_init_user.sql:/docker-entrypoint-initdb.d/docker_postgres_init_user.sql
+    networks:
+      - red-pocket-dev
+
+volumes:
+  postgres:
+    driver: local
+  npm-cache:
+    driver: local
+  ts-cache:
+    driver: local

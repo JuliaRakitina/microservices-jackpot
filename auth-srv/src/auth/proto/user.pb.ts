@@ -63,6 +63,8 @@ export interface GetUserByUserIdResponse {
 
 /** get User by userId */
 export interface DeleteUserRequest {
+  status: number;
+  error: string[];
   userId: number;
 }
 
