@@ -7,6 +7,14 @@ import {
   AddJackpotAmountResponse,
   CreateJackpotRequest,
   CreateJackpotResponse,
+  ListAllJackpotsRequest,
+  ListAllJackpotsResponse,
+  RunJackpotRequest,
+  RunJackpotResponse,
+  StopActiveJackpotRequest,
+  StopActiveJackpotResponse,
+  WithdrawFromJackpotRequest,
+  WithdrawFromJackpotResponse,
 } from './proto/jackpot.pb';
 import { STATUSES } from './utils';
 
@@ -30,7 +38,7 @@ export class JackpotService {
     return { id: jackpot.id, error: null, status: HttpStatus.OK };
   }
 
-  public async AddJackpotAmount({
+  public async addJackpotAmount({
     id,
     amount,
   }: AddJackpotAmountRequest): Promise<AddJackpotAmountResponse> {
@@ -69,6 +77,90 @@ export class JackpotService {
       error: null,
       status: HttpStatus.OK,
     };
+  }
+
+  public async withdrawFromJackpot({
+    id,
+    amount,
+    userId,
+  }: WithdrawFromJackpotRequest): Promise<WithdrawFromJackpotResponse> {
+    const jackpot: Jackpot = await this.repository.findOne({ where: { id } });
+
+    if (!jackpot) {
+      return {
+        error: ['Jackpot not found'],
+        status: HttpStatus.NOT_FOUND,
+      };
+    }
+    if (jackpot.status != STATUSES.WON) {
+      return {
+        error: ['Jackpot is not won'],
+        status: HttpStatus.NOT_FOUND,
+      };
+    }
+    jackpot.amount = jackpot.amount - amount;
+    //TODO check USERid
+    const newJackpot = await this.repository.save(jackpot);
+    if (newJackpot) {
+    } else {
+    }
+
+    return {
+      error: null,
+      status: HttpStatus.OK,
+    };
+  }
+
+  public async listAllJackpots(
+    request: ListAllJackpotsRequest,
+  ): Promise<ListAllJackpotsResponse> {
+    const jackpots: Jackpot[] = await this.repository.find();
+
+    return { data: jackpots, error: null, status: HttpStatus.OK };
+  }
+
+  public async runJackpot({
+    id,
+  }: RunJackpotRequest): Promise<RunJackpotResponse> {
+    const jackpot: Jackpot = await this.repository.findOne({ where: { id } });
+
+    if (!jackpot) {
+      return {
+        error: ['Jackpot not found'],
+        status: HttpStatus.NOT_FOUND,
+      };
+    }
+    if (jackpot.status == STATUSES.ACTIVE) {
+      return {
+        error: ['Jackpot is already active'],
+        status: HttpStatus.NOT_FOUND,
+      };
+    }
+    jackpot.status = STATUSES.ACTIVE;
+    await this.repository.save(jackpot);
+    return { error: null, status: HttpStatus.OK };
+  }
+
+  public async stopActiveJackpot({
+    id,
+  }: StopActiveJackpotRequest): Promise<StopActiveJackpotResponse> {
+    const jackpot: Jackpot = await this.repository.findOne({ where: { id } });
+
+    if (!jackpot) {
+      return {
+        error: ['Jackpot not found'],
+        status: HttpStatus.NOT_FOUND,
+      };
+    }
+    if (jackpot.status !== STATUSES.ACTIVE) {
+      return {
+        error: ['Jackpot is not active'],
+        status: HttpStatus.NOT_FOUND,
+      };
+    }
+    jackpot.status = STATUSES.FINISHED;
+    await this.repository.save(jackpot);
+    return { error: null, status: HttpStatus.OK };
   }
 
   private randomIntFromInterval(min, max) {

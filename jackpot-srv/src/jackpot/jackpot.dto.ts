@@ -43,5 +43,8 @@ export class WithdrawFromJackpotRequestDto
   public id: number;
 
   @IsNumber()
+  public userId: number;
+
+  @IsNumber()
   public amount: number;
 }

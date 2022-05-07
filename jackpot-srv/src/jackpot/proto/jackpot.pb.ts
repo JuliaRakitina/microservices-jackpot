@@ -73,6 +73,7 @@ export interface DeleteJackpotResponse {
 export interface WithdrawFromJackpotRequest {
   id: number;
   amount: number;
+  userId: number;
 }
 
 export interface WithdrawFromJackpotResponse {

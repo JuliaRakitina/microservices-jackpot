@@ -81,31 +81,31 @@ services:
     depends_on:
       - red-pocket-postgres
 
-#  red-pocket-jackpot-srv:
-#    container_name: red-pocket-jackpot-srv
-#    build:
-#      context: .
-#      dockerfile: jackpot-srv/Dockerfile
-#      network: host
-#    environment:
-#      - NODE_ENV=dev
-#    command: npm run start:dev
-#    env_file:
-#      - .env
-#    ports:
-#      - ${JACKPOT_APP_PORT}:${JACKPOT_APP_PORT}
-#    volumes:
-#      - ./jackpot-srv:/app
-#      - ./rp-proto:/app/rp-proto
-#      - /app/dist
-#      - /app/node_modules
-#      - npm-cache:/root/.npm
-#      - ts-cache:/root/.ts-node
-#    working_dir: /app
-#    networks:
-#      - red-pocket-dev
-#    depends_on:
-#      - red-pocket-postgres
+  red-pocket-jackpot-srv:
+    container_name: red-pocket-jackpot-srv
+    build:
+      context: .
+      dockerfile: jackpot-srv/Dockerfile
+      network: host
+    environment:
+      - NODE_ENV=dev
+    command: npm run start:dev
+    env_file:
+      - .env
+    ports:
+      - ${JACKPOT_APP_PORT}:${JACKPOT_APP_PORT}
+    volumes:
+      - ./jackpot-srv:/app
+      - ./rp-proto:/app/rp-proto
+      - /app/dist
+      - /app/node_modules
+      - npm-cache:/root/.npm
+      - ts-cache:/root/.ts-node
+    working_dir: /app
+    networks:
+      - red-pocket-dev
+    depends_on:
+      - red-pocket-postgres
 
   red-pocket-postgres:
     container_name: red-pocket-postgres
