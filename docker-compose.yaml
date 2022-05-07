@@ -107,6 +107,32 @@ services:
     depends_on:
       - red-pocket-postgres
 
+  red-pocket-bet-srv:
+    container_name: red-pocket-bet-srv
+    build:
+      context: .
+      dockerfile: bet-srv/Dockerfile
+      network: host
+    environment:
+      - NODE_ENV=dev
+    command: npm run start:dev
+    env_file:
+      - .env
+    ports:
+      - ${BETS_APP_PORT}:${BETS_APP_PORT}
+    volumes:
+      - ./bet-srv:/app
+      - ./rp-proto:/app/rp-proto
+      - /app/dist
+      - /app/node_modules
+      - npm-cache:/root/.npm
+      - ts-cache:/root/.ts-node
+    working_dir: /app
+    networks:
+      - red-pocket-dev
+    depends_on:
+      - red-pocket-postgres
+
   red-pocket-postgres:
     container_name: red-pocket-postgres
     image: postgres:13
