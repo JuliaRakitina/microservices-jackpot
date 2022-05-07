@@ -14,6 +14,7 @@ RUN npm install rp-proto/
 RUN protoc --plugin=/app/node_modules/.bin/protoc-gen-ts_proto -I=/app/node_modules/rp-proto/proto --ts_proto_out=src/auth/ /app/node_modules/rp-proto/proto/auth.proto --ts_proto_opt=nestJs=true --ts_proto_opt=fileSuffix=.pb --ts_proto_opt=esModuleInterop=true
 RUN protoc --plugin=/app/node_modules/.bin/protoc-gen-ts_proto -I=/app/node_modules/rp-proto/proto --ts_proto_out=src/user/ /app/node_modules/rp-proto/proto/user.proto --ts_proto_opt=nestJs=true --ts_proto_opt=fileSuffix=.pb --ts_proto_opt=esModuleInterop=true
 RUN protoc --plugin=/app/node_modules/.bin/protoc-gen-ts_proto -I=/app/node_modules/rp-proto/proto --ts_proto_out=src/jackpot/ /app/node_modules/rp-proto/proto/jackpot.proto --ts_proto_opt=nestJs=true --ts_proto_opt=fileSuffix=.pb --ts_proto_opt=esModuleInterop=true
+RUN protoc --plugin=/app/node_modules/.bin/protoc-gen-ts_proto -I=/app/node_modules/rp-proto/proto --ts_proto_out=src/bet/ /app/node_modules/rp-proto/proto/bet.proto --ts_proto_opt=nestJs=true --ts_proto_opt=fileSuffix=.pb --ts_proto_opt=esModuleInterop=true
 
 RUN npm run build
 

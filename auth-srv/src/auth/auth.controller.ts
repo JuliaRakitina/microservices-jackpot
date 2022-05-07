@@ -10,6 +10,8 @@ import {
   RegisterResponse,
   LoginResponse,
   ValidateResponse,
+  DeleteAuthByIdRequest,
+  DeleteAuthByIdResponse,
 } from './proto/auth.pb';
 import { AuthService } from './service/auth.service';
 
@@ -31,5 +33,12 @@ export class AuthController {
   @GrpcMethod(AUTH_SERVICE_NAME, 'Validate')
   private validate(payload: ValidateRequestDto): Promise<ValidateResponse> {
     return this.service.validate(payload);
+  }
+
+  @GrpcMethod(AUTH_SERVICE_NAME, 'DeleteAuthById')
+  private deleteAuthById(
+    payload: DeleteAuthByIdRequest,
+  ): Promise<DeleteAuthByIdResponse> {
+    return this.service.deleteAuthById(payload);
   }
 }

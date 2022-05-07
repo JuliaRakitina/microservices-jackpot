@@ -15,9 +15,7 @@ export class User extends BaseEntity {
   public role!: string;
 
   @Column({
-    type: 'decimal',
-    precision: 12,
-    scale: 2,
+    type: 'integer',
     nullable: true,
     default: 0,
   })

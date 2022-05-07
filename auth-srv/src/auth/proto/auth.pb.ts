@@ -30,6 +30,15 @@ export interface LoginResponse {
   token: string;
 }
 
+export interface DeleteAuthByIdRequest {
+  id: number;
+}
+
+export interface DeleteAuthByIdResponse {
+  status: number;
+  error: string[];
+}
+
 /** Validate */
 export interface ValidateRequest {
   token: string;
@@ -50,6 +59,10 @@ export interface AuthServiceClient {
   login(request: LoginRequest): Observable<LoginResponse>;
 
   validate(request: ValidateRequest): Observable<ValidateResponse>;
+
+  deleteAuthById(
+    request: DeleteAuthByIdRequest,
+  ): Observable<DeleteAuthByIdResponse>;
 }
 
 export interface AuthServiceController {
@@ -70,11 +83,23 @@ export interface AuthServiceController {
     | Promise<ValidateResponse>
     | Observable<ValidateResponse>
     | ValidateResponse;
+
+  deleteAuthById(
+    request: DeleteAuthByIdRequest,
+  ):
+    | Promise<DeleteAuthByIdResponse>
+    | Observable<DeleteAuthByIdResponse>
+    | DeleteAuthByIdResponse;
 }
 
 export function AuthServiceControllerMethods() {
   return function (constructor: Function) {
-    const grpcMethods: string[] = ['register', 'login', 'validate'];
+    const grpcMethods: string[] = [
+      'register',
+      'login',
+      'validate',
+      'deleteAuthById',
+    ];
     for (const method of grpcMethods) {
       const descriptor: any = Reflect.getOwnPropertyDescriptor(
         constructor.prototype,

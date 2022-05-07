@@ -1,0 +1,78 @@
+syntax = "proto3";
+
+package bet;
+
+service UserService {
+  rpc MakeBet (MakeBetRequest) returns (MakeBetResponse) {}
+  rpc GetBetsByUserId (GetBetsByUserIdRequest) returns (GetBetsByUserIdResponse) {}
+  rpc GetJackpotBetsInfoId (GetJackpotBetsInfoIdRequest) returns (GetJackpotBetsInfoIdResponse) {}
+  rpc GetJackpotWinner (GetJackpotWinnerRequest) returns (GetJackpotWinnerResponse) {}
+  rpc GetWonBetsByUserId (GetWonBetsByUserIdRequest) returns (GetWonBetsByUserIdResponse) {}
+}
+
+message BetData {
+  int32 id = 1;
+  int32 userId = 2;
+  int32 jackpotId = 3;
+  int32 bet = 4;
+  string status = 5; // won , slip
+}
+
+
+message MakeBetRequest {
+  int32 id = 1;
+  int32 userId = 2;
+  int32 jackpotId = 3;
+  int32 bet = 4;
+}
+
+message MakeBetResponse {
+  int32 status = 1;
+  repeated string error = 2;
+  BetData data = 3;
+}
+
+
+message GetBetsByUserIdRequest {
+  int32 userId = 2;
+}
+
+message GetBetsByUserIdResponse {
+  int32 status = 1;
+  repeated string error = 2;
+  repeated BetData data = 3;
+}
+
+
+message GetJackpotBetsInfoIdRequest {
+  int32 userId = 2;
+}
+
+message GetJackpotBetsInfoIdResponse {
+  int32 status = 1;
+  repeated string error = 2;
+  repeated BetData data = 3;
+}
+
+message GetJackpotWinnerRequest {
+  int32 jackpotId = 2;
+}
+
+message GetJackpotWinnerResponse {
+  int32 status = 1;
+  repeated string error = 2;
+  string jackpotStatus = 3;
+  string userId = 4;
+  string bet = 5;
+}
+
+
+message GetWonBetsByUserIdRequest {
+  int32 jackpotId = 2;
+}
+
+message GetWonBetsByUserIdResponse {
+  int32 status = 1;
+  repeated string error = 2;
+  repeated BetData data = 3;
+}

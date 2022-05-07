@@ -6,10 +6,12 @@ import { Observable } from 'rxjs';
 
 export const protobufPackage = 'user';
 
-export interface UsersData {
+export interface UserData {
+  id: number;
   email: string;
-  password: string;
+  userId: number;
   role: string;
+  balance: number;
 }
 
 /** get Users Info */
@@ -18,13 +20,13 @@ export interface ListAllUsersRequest {}
 export interface ListAllUsersResponse {
   status: number;
   error: string[];
-  data: UsersData[];
+  data: UserData[];
 }
 
-/** get User Info */
+/** create User */
 export interface CreateUserRequest {
   email: string;
-  password: string;
+  userId: number;
   role: string;
 }
 
@@ -34,13 +36,88 @@ export interface CreateUserResponse {
   id: number;
 }
 
+/** create User */
+export interface UpdateUserBalanceRequest {
+  userId: number;
+  operation: string;
+  amount: number;
+}
+
+export interface UpdateUserBalanceResponse {
+  status: number;
+  error: string[];
+  userId: number;
+  balance: number;
+}
+
+/** get User by userId */
+export interface GetUserByUserIdRequest {
+  userId: number;
+}
+
+export interface GetUserByUserIdResponse {
+  status: number;
+  error: string[];
+  data: UserData | undefined;
+}
+
+/** get User by userId */
+export interface DeleteUserRequest {
+  userId: number;
+}
+
+export interface DeleteUserResponse {
+  status: number;
+  error: string[];
+}
+
 export const USER_PACKAGE_NAME = 'user';
 
 export interface UserServiceClient {
+  createUser(request: CreateUserRequest): Observable<CreateUserResponse>;
+
+  updateUserBalance(
+    request: UpdateUserBalanceRequest,
+  ): Observable<UpdateUserBalanceResponse>;
+
+  getUserByUserId(
+    request: GetUserByUserIdRequest,
+  ): Observable<GetUserByUserIdResponse>;
+
+  deleteUser(request: DeleteUserRequest): Observable<DeleteUserResponse>;
+
   listAllUsers(request: ListAllUsersRequest): Observable<ListAllUsersResponse>;
 }
 
 export interface UserServiceController {
+  createUser(
+    request: CreateUserRequest,
+  ):
+    | Promise<CreateUserResponse>
+    | Observable<CreateUserResponse>
+    | CreateUserResponse;
+
+  updateUserBalance(
+    request: UpdateUserBalanceRequest,
+  ):
+    | Promise<UpdateUserBalanceResponse>
+    | Observable<UpdateUserBalanceResponse>
+    | UpdateUserBalanceResponse;
+
+  getUserByUserId(
+    request: GetUserByUserIdRequest,
+  ):
+    | Promise<GetUserByUserIdResponse>
+    | Observable<GetUserByUserIdResponse>
+    | GetUserByUserIdResponse;
+
+  deleteUser(
+    request: DeleteUserRequest,
+  ):
+    | Promise<DeleteUserResponse>
+    | Observable<DeleteUserResponse>
+    | DeleteUserResponse;
+
   listAllUsers(
     request: ListAllUsersRequest,
   ):
@@ -51,7 +128,13 @@ export interface UserServiceController {
 
 export function UserServiceControllerMethods() {
   return function (constructor: Function) {
-    const grpcMethods: string[] = ['listAllUsers'];
+    const grpcMethods: string[] = [
+      'createUser',
+      'updateUserBalance',
+      'getUserByUserId',
+      'deleteUser',
+      'listAllUsers',
+    ];
     for (const method of grpcMethods) {
       const descriptor: any = Reflect.getOwnPropertyDescriptor(
         constructor.prototype,

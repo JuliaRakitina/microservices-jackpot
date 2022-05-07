@@ -4,10 +4,12 @@ import { UserService } from './user.service';
 import {
   CreateUserResponse,
   DeleteUserResponse,
+  GetUserByUserIdRequest,
+  GetUserByUserIdResponse,
   UpdateUserBalanceRequest,
   UpdateUserBalanceResponse,
   USER_SERVICE_NAME,
-} from './user.pb';
+} from './proto/user.pb';
 import {
   CreateUserRequestDto,
   DeleteUserRequestDto,
@@ -26,8 +28,15 @@ export class UserController {
     return this.service.createUser(payload);
   }
 
-  @GrpcMethod(USER_SERVICE_NAME, 'UpdateUserBalanceRequest')
-  private UpdateUserBalance(
+  @GrpcMethod(USER_SERVICE_NAME, 'GetUserByUserId')
+  private getUserByUserId(
+    payload: GetUserByUserIdRequest,
+  ): Promise<GetUserByUserIdResponse> {
+    return this.service.getUserByUserId(payload);
+  }
+
+  @GrpcMethod(USER_SERVICE_NAME, 'UpdateUserBalance')
+  private updateUserBalance(
     payload: UpdateUserBalanceRequestDto,
   ): Promise<UpdateUserBalanceResponse> {
     return this.service.updateUserBalance(payload);

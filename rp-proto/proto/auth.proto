@@ -6,6 +6,7 @@ service AuthService {
   rpc Register (RegisterRequest) returns (RegisterResponse) {}
   rpc Login (LoginRequest) returns (LoginResponse) {}
   rpc Validate (ValidateRequest) returns (ValidateResponse) {}
+  rpc DeleteAuthById (DeleteAuthByIdRequest) returns (DeleteAuthByIdResponse) {}
 }
 
 // Register
@@ -30,6 +31,14 @@ message LoginResponse {
   int32 status = 1;
   repeated string error = 2;
   string token = 3;
+}
+
+message DeleteAuthByIdRequest {
+  int32 id = 1;
+}
+message DeleteAuthByIdResponse  {
+  int32 status = 1;
+  repeated string error = 2;
 }
 
 // Validate

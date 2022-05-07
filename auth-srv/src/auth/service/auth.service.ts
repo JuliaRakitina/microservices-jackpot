@@ -9,12 +9,15 @@ import {
 } from '../auth.dto';
 import { Auth } from '../auth.entity';
 import {
+  DeleteAuthByIdRequest,
+  DeleteAuthByIdResponse,
   LoginResponse,
   RegisterResponse,
   ValidateResponse,
 } from '../proto/auth.pb';
 import { USER_SERVICE_NAME, UserServiceClient } from '../proto/user.pb';
 import { ClientGrpc } from '@nestjs/microservices';
+import { firstValueFrom } from 'rxjs';
 
 @Injectable()
 export class AuthService implements OnModuleInit {
@@ -56,7 +59,10 @@ export class AuthService implements OnModuleInit {
       userId: id,
       role,
     };
-    await this.userSvc.createUser(data);
+
+    this.userSvc.createUser(data).subscribe((user) => {
+      console.info(`User saved in User ms with id ${user.id}`);
+    });
 
     return { status: HttpStatus.CREATED, error: null };
   }
@@ -88,8 +94,11 @@ export class AuthService implements OnModuleInit {
       };
     }
 
+    const user = await firstValueFrom(
+      this.userSvc.getUserByUserId({ userId: auth.id }),
+    );
+    auth.role = user.data?.role;
     const token: string = this.jwtService.generateToken(auth);
-
     return { token, status: HttpStatus.OK, error: null };
   }
 
@@ -122,7 +131,22 @@ export class AuthService implements OnModuleInit {
       status: HttpStatus.OK,
       error: null,
       userId: decoded.id,
-      role: auth.role,
+      role: decoded.role,
     };
+  }
+
+  public async deleteAuthById({
+    id,
+  }: DeleteAuthByIdRequest): Promise<DeleteAuthByIdResponse> {
+    const auth: Auth = await this.repository.findOne({ where: { id } });
+
+    if (!auth) {
+      return {
+        error: ['Auth info not found'],
+        status: HttpStatus.NOT_FOUND,
+      };
+    }
+    await this.repository.remove(auth);
+    return { status: HttpStatus.OK, error: null };
   }
 }

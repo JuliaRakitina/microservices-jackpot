@@ -6,12 +6,28 @@ import { Observable } from 'rxjs';
 
 export const protobufPackage = 'jackpot';
 
-export interface CreateJackpotRequest {}
+export interface JackpotData {
+  id: number;
+  amount: number;
+  status: string;
+}
+
+export interface CreateJackpotRequest {
+  seed: number;
+}
 
 export interface CreateJackpotResponse {
   status: number;
   error: string[];
   id: number;
+}
+
+export interface ListAllJackpotsRequest {}
+
+export interface ListAllJackpotsResponse {
+  status: number;
+  error: string[];
+  data: JackpotData[];
 }
 
 export interface AddJackpotAmountRequest {
@@ -22,6 +38,9 @@ export interface AddJackpotAmountRequest {
 export interface AddJackpotAmountResponse {
   status: number;
   error: string[];
+  id: number;
+  amount: number;
+  isWon: boolean;
 }
 
 export interface RunJackpotRequest {
@@ -33,7 +52,9 @@ export interface RunJackpotResponse {
   error: string[];
 }
 
-export interface StopActiveJackpotRequest {}
+export interface StopActiveJackpotRequest {
+  id: number;
+}
 
 export interface StopActiveJackpotResponse {
   status: number;
@@ -52,6 +73,7 @@ export interface DeleteJackpotResponse {
 export interface WithdrawFromJackpotRequest {
   id: number;
   amount: number;
+  userId: number;
 }
 
 export interface WithdrawFromJackpotResponse {
@@ -65,6 +87,10 @@ export interface JackpotServiceClient {
   createJackpot(
     request: CreateJackpotRequest,
   ): Observable<CreateJackpotResponse>;
+
+  listAllJackpots(
+    request: ListAllJackpotsRequest,
+  ): Observable<ListAllJackpotsResponse>;
 
   addJackpotAmount(
     request: AddJackpotAmountRequest,
@@ -92,6 +118,13 @@ export interface JackpotServiceController {
     | Promise<CreateJackpotResponse>
     | Observable<CreateJackpotResponse>
     | CreateJackpotResponse;
+
+  listAllJackpots(
+    request: ListAllJackpotsRequest,
+  ):
+    | Promise<ListAllJackpotsResponse>
+    | Observable<ListAllJackpotsResponse>
+    | ListAllJackpotsResponse;
 
   addJackpotAmount(
     request: AddJackpotAmountRequest,
@@ -133,6 +166,7 @@ export function JackpotServiceControllerMethods() {
   return function (constructor: Function) {
     const grpcMethods: string[] = [
       'createJackpot',
+      'listAllJackpots',
       'addJackpotAmount',
       'runJackpot',
       'stopActiveJackpot',

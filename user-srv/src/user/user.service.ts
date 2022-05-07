@@ -1,4 +1,4 @@
-import { HttpStatus, Injectable } from '@nestjs/common';
+import { HttpStatus, Inject, Injectable, OnModuleInit } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 import { User } from './user.entity';
@@ -13,13 +13,23 @@ import {
   UpdateUserBalanceRequest,
   UpdateUserBalanceResponse,
   UserData,
-} from './user.pb';
+} from './proto/user.pb';
 import { DeleteUserRequestDto } from './user.dto';
+import { ClientGrpc } from '@nestjs/microservices';
+import { AUTH_SERVICE_NAME, AuthServiceClient } from './proto/auth.pb';
+import { firstValueFrom } from 'rxjs';
 
 @Injectable()
-export class UserService {
+export class UserService implements OnModuleInit {
   @InjectRepository(User)
   private readonly repository: Repository<User>;
+
+  @Inject(AUTH_SERVICE_NAME)
+  private readonly client: ClientGrpc;
+  private authSvc: AuthServiceClient;
+  public onModuleInit(): void {
+    this.authSvc = this.client.getService<AuthServiceClient>(AUTH_SERVICE_NAME);
+  }
 
   public async getUserByUserId({
     userId,
@@ -67,6 +77,7 @@ export class UserService {
     }
 
     await this.repository.remove(user);
+    await firstValueFrom(this.authSvc.deleteAuthById({ id: user.userId }));
 
     return { error: null, status: HttpStatus.OK };
   }
@@ -93,7 +104,7 @@ export class UserService {
     if (operation === 'subtract') {
       user.balance = user.balance - amount;
     }
-
+    console.info(user);
     await this.repository.save(user);
 
     return {

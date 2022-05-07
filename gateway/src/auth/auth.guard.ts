@@ -31,11 +31,11 @@ export class AuthGuard implements CanActivate {
 
     const token: string = bearer[1];
 
-    const { status, userId }: ValidateResponse = await this.service.validate(
-      token,
-    );
+    const { status, userId, role }: ValidateResponse =
+      await this.service.validate(token);
 
     req['user'] = userId;
+    req['role'] = role;
 
     if (status !== HttpStatus.OK) {
       throw new UnauthorizedException();

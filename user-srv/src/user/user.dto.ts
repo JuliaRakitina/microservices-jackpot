@@ -4,7 +4,7 @@ import {
   DeleteUserRequest,
   GetUserByUserIdRequest,
   UpdateUserBalanceRequest,
-} from './user.pb';
+} from './proto/user.pb';
 
 export class GetUserByUserIdRequestDto implements GetUserByUserIdRequest {
   @IsNumber({ allowInfinity: false, allowNaN: false })
