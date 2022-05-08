@@ -24,7 +24,6 @@ import {
   UpdateUserBalanceRequest,
   UpdateUserBalanceResponse,
   USER_SERVICE_NAME,
-  UserData,
   UserServiceClient,
 } from './user.pb';
 

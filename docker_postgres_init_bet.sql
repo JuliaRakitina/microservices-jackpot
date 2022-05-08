@@ -1,4 +1,4 @@
-CREATE DATABASE micro_bets
+CREATE DATABASE micro_bet
     WITH
     OWNER = postgres
     TABLESPACE = 'pg_default'

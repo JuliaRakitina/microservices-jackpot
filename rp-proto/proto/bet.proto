@@ -2,7 +2,7 @@ syntax = "proto3";
 
 package bet;
 
-service UserService {
+service BetService {
   rpc MakeBet (MakeBetRequest) returns (MakeBetResponse) {}
   rpc GetBetsByUserId (GetBetsByUserIdRequest) returns (GetBetsByUserIdResponse) {}
   rpc GetJackpotBetsInfoId (GetJackpotBetsInfoIdRequest) returns (GetJackpotBetsInfoIdResponse) {}
@@ -20,10 +20,9 @@ message BetData {
 
 
 message MakeBetRequest {
-  int32 id = 1;
-  int32 userId = 2;
-  int32 jackpotId = 3;
-  int32 bet = 4;
+  int32 userId = 1;
+  int32 jackpotId = 2;
+  int32 bet = 3;
 }
 
 message MakeBetResponse {
@@ -34,7 +33,7 @@ message MakeBetResponse {
 
 
 message GetBetsByUserIdRequest {
-  int32 userId = 2;
+  int32 userId = 1;
 }
 
 message GetBetsByUserIdResponse {
@@ -45,7 +44,7 @@ message GetBetsByUserIdResponse {
 
 
 message GetJackpotBetsInfoIdRequest {
-  int32 userId = 2;
+  int32 userId = 1;
 }
 
 message GetJackpotBetsInfoIdResponse {
@@ -55,7 +54,7 @@ message GetJackpotBetsInfoIdResponse {
 }
 
 message GetJackpotWinnerRequest {
-  int32 jackpotId = 2;
+  int32 jackpotId = 1;
 }
 
 message GetJackpotWinnerResponse {
@@ -68,7 +67,7 @@ message GetJackpotWinnerResponse {
 
 
 message GetWonBetsByUserIdRequest {
-  int32 jackpotId = 2;
+  int32 userId = 1;
 }
 
 message GetWonBetsByUserIdResponse {

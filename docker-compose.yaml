@@ -145,10 +145,7 @@ services:
       - ${DB_OUT_PORT}:${DB_PORT}
     volumes:
       - postgres:/var/lib/postgresql/data
-      - ./docker_postgres_init_auth.sql:/docker-entrypoint-initdb.d/docker_postgres_init_auth.sql
-      - ./docker_postgres_init_user.sql:/docker-entrypoint-initdb.d/docker_postgres_init_user.sql
-      - ./docker_postgres_init_bet.sql:/docker-entrypoint-initdb.d/docker_postgres_init_bet.sql
-      - ./docker_postgres_init_jackpot.sql:/docker-entrypoint-initdb.d/docker_postgres_init_jackpot.sql
+      - ./db:/docker-entrypoint-initdb.d/
     networks:
       - red-pocket-dev
 

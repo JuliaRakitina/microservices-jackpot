@@ -16,7 +16,6 @@ export interface BetData {
 }
 
 export interface MakeBetRequest {
-  id: number;
   userId: number;
   jackpotId: number;
   bet: number;
@@ -61,7 +60,7 @@ export interface GetJackpotWinnerResponse {
 }
 
 export interface GetWonBetsByUserIdRequest {
-  jackpotId: number;
+  userId: number;
 }
 
 export interface GetWonBetsByUserIdResponse {
