@@ -144,13 +144,13 @@ services:
     ports:
       - ${DB_OUT_PORT}:${DB_PORT}
     volumes:
-      - postgres:/var/lib/postgresql/data
+      - postgres-red-pocket:/var/lib/postgresql/data
       - ./db:/docker-entrypoint-initdb.d/
     networks:
       - red-pocket-dev
 
 volumes:
-  postgres:
+  postgres-red-pocket:
     driver: local
   npm-cache:
     driver: local

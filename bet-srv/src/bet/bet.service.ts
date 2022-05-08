@@ -13,17 +13,20 @@ import { firstValueFrom } from 'rxjs';
 export class BetService implements OnModuleInit {
   @InjectRepository(Bet)
   private readonly repository: Repository<Bet>;
-  private readonly client: ClientGrpc;
 
   @Inject(JACKPOT_SERVICE_NAME)
+  private readonly jackpotClient: ClientGrpc;
   private jackpotSvc: JackpotServiceClient;
+
   @Inject(USER_SERVICE_NAME)
+  private readonly userClient: ClientGrpc;
   private userSvc: UserServiceClient;
 
   public onModuleInit(): void {
     this.jackpotSvc =
-      this.client.getService<JackpotServiceClient>(JACKPOT_SERVICE_NAME);
-    this.userSvc = this.client.getService<UserServiceClient>(USER_SERVICE_NAME);
+      this.jackpotClient.getService<JackpotServiceClient>(JACKPOT_SERVICE_NAME);
+    this.userSvc =
+      this.userClient.getService<UserServiceClient>(USER_SERVICE_NAME);
   }
 
   public async makeBet({
