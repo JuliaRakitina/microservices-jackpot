@@ -12,6 +12,8 @@ import { TypeOrmModule } from '@nestjs/typeorm';
       // host: 'localhost',
       port: 5432,
       database: 'micro_jackpot',
+      username: 'postgres',
+      password: 'postgres',
       entities: ['dist/**/*.entity.{ts,js}'],
       synchronize: true, // never true in production!
     }),
