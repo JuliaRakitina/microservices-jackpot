@@ -9,6 +9,7 @@ import { UserModule } from './user/user.module';
     TypeOrmModule.forRoot({
       type: 'postgres',
       host: 'red-pocket-postgres',
+      // host: 'localhost',
       port: 5432,
       database: 'micro_user',
       username: 'postgres',

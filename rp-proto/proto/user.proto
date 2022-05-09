@@ -4,6 +4,7 @@ package user;
 
 service UserService {
   rpc CreateUser (CreateUserRequest) returns (CreateUserResponse) {}
+  rpc TestUser (TestUserRequest) returns (TestUserRequestResponse) {}
   rpc UpdateUserBalance (UpdateUserBalanceRequest) returns (UpdateUserBalanceResponse) {}
   rpc GetUserByUserId (GetUserByUserIdRequest) returns (GetUserByUserIdResponse) {}
   rpc DeleteUser (DeleteUserRequest) returns (DeleteUserResponse) {}
@@ -76,4 +77,13 @@ message DeleteUserRequest {
 message DeleteUserResponse {
   int32 status = 1;
   repeated string error = 2;
+}
+
+
+// get Users Info
+message TestUserRequest {
+}
+
+message TestUserRequestResponse {
+  int32 status = 1;
 }

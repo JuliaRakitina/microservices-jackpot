@@ -1,14 +1,15 @@
 import { Controller, Inject } from '@nestjs/common';
-import { JackpotService } from './jackpot.service';
 import { GrpcMethod } from '@nestjs/microservices';
+import { JackpotService } from './jackpot.service';
 import {
   AddJackpotAmountResponse,
   CreateJackpotResponse,
-  JACKPOT_PACKAGE_NAME,
+  JACKPOT_SERVICE_NAME,
   ListAllJackpotsRequest,
   ListAllJackpotsResponse,
   RunJackpotResponse,
   StopActiveJackpotResponse,
+  TestJackpotResponse,
   WithdrawFromJackpotResponse,
 } from './proto/jackpot.pb';
 import {
@@ -19,47 +20,52 @@ import {
   WithdrawFromJackpotRequestDto,
 } from './jackpot.dto';
 
-@Controller('jackpot')
+@Controller()
 export class JackpotController {
   @Inject(JackpotService)
   private readonly service: JackpotService;
 
-  @GrpcMethod(JACKPOT_PACKAGE_NAME, 'CreateJackpot')
+  @GrpcMethod(JACKPOT_SERVICE_NAME, 'TestJackpot')
+  private testJackpot(): Promise<TestJackpotResponse> {
+    return this.service.testJackpot();
+  }
+
+  @GrpcMethod(JACKPOT_SERVICE_NAME, 'CreateJackpot')
   private async createJackpot(
     data: CreateJackpotRequestDto,
   ): Promise<CreateJackpotResponse> {
     return this.service.createJackpot(data);
   }
 
-  @GrpcMethod(JACKPOT_PACKAGE_NAME, 'AddJackpotAmount')
+  @GrpcMethod(JACKPOT_SERVICE_NAME, 'AddJackpotAmount')
   private async addJackpotAmount(
     data: AddJackpotAmountRequestDto,
   ): Promise<AddJackpotAmountResponse> {
     return this.service.addJackpotAmount(data);
   }
 
-  @GrpcMethod(JACKPOT_PACKAGE_NAME, 'WithdrawFromJackpot')
+  @GrpcMethod(JACKPOT_SERVICE_NAME, 'WithdrawFromJackpot')
   private async withdrawFromJackpot(
     data: WithdrawFromJackpotRequestDto,
   ): Promise<WithdrawFromJackpotResponse> {
     return this.service.withdrawFromJackpot(data);
   }
 
-  @GrpcMethod(JACKPOT_PACKAGE_NAME, 'ListAllJackpots')
+  @GrpcMethod(JACKPOT_SERVICE_NAME, 'ListAllJackpots')
   private async listAllJackpots(
     data: ListAllJackpotsRequest,
   ): Promise<ListAllJackpotsResponse> {
     return this.service.listAllJackpots(data);
   }
 
-  @GrpcMethod(JACKPOT_PACKAGE_NAME, 'RunJackpot')
+  @GrpcMethod(JACKPOT_SERVICE_NAME, 'RunJackpot')
   private async runJackpot(
     data: RunJackpotRequestDto,
   ): Promise<RunJackpotResponse> {
     return this.service.runJackpot(data);
   }
 
-  @GrpcMethod(JACKPOT_PACKAGE_NAME, 'StopActiveJackpot')
+  @GrpcMethod(JACKPOT_SERVICE_NAME, 'StopActiveJackpot')
   private async stopActiveJackpot(
     data: StopActiveJackpotRequestDto,
   ): Promise<StopActiveJackpotResponse> {

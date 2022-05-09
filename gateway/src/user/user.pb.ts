@@ -71,10 +71,19 @@ export interface DeleteUserResponse {
   error: string[];
 }
 
+/** get Users Info */
+export interface TestUserRequest {}
+
+export interface TestUserRequestResponse {
+  status: number;
+}
+
 export const USER_PACKAGE_NAME = 'user';
 
 export interface UserServiceClient {
   createUser(request: CreateUserRequest): Observable<CreateUserResponse>;
+
+  testUser(request: TestUserRequest): Observable<TestUserRequestResponse>;
 
   updateUserBalance(
     request: UpdateUserBalanceRequest,
@@ -96,6 +105,13 @@ export interface UserServiceController {
     | Promise<CreateUserResponse>
     | Observable<CreateUserResponse>
     | CreateUserResponse;
+
+  testUser(
+    request: TestUserRequest,
+  ):
+    | Promise<TestUserRequestResponse>
+    | Observable<TestUserRequestResponse>
+    | TestUserRequestResponse;
 
   updateUserBalance(
     request: UpdateUserBalanceRequest,
@@ -130,6 +146,7 @@ export function UserServiceControllerMethods() {
   return function (constructor: Function) {
     const grpcMethods: string[] = [
       'createUser',
+      'testUser',
       'updateUserBalance',
       'getUserByUserId',
       'deleteUser',

@@ -2,21 +2,22 @@ import {
   Controller,
   Inject,
   OnModuleInit,
-  UseGuards,
+  Get,
   Post,
+  UseGuards,
+  Req,
   Body,
   HttpStatus,
-  Req,
 } from '@nestjs/common';
 import { ClientGrpc } from '@nestjs/microservices';
 import { Observable, of } from 'rxjs';
-import { AuthGuard } from '../auth/auth.guard';
 import {
-  CreateJackpotRequest,
-  CreateJackpotResponse,
   JACKPOT_SERVICE_NAME,
   JackpotServiceClient,
+  CreateJackpotRequest,
+  CreateJackpotResponse,
 } from './jackpot.pb';
+import { AuthGuard } from '../auth/auth.guard';
 import { Request } from 'express';
 
 @Controller('jackpot')
@@ -29,6 +30,11 @@ export class JackpotController implements OnModuleInit {
   public onModuleInit(): void {
     this.svc =
       this.client.getService<JackpotServiceClient>(JACKPOT_SERVICE_NAME);
+  }
+
+  @Get('test')
+  private async testJackpot(): Promise<Observable<any>> {
+    return this.svc.testJackpot({});
   }
 
   @Post()
@@ -47,10 +53,4 @@ export class JackpotController implements OnModuleInit {
       });
     }
   }
-
-  // @Get(':id')
-  // @UseGuards(AuthGuard)
-  // private async findOne(@Param('id', ParseIntPipe) id: number): Promise<Observable<FindOneResponse>> {
-  //     return this.svc.findOne({ id });
-  // }
 }

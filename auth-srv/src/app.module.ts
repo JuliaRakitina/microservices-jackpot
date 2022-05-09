@@ -9,6 +9,7 @@ import { AuthModule } from './auth/auth.module';
     TypeOrmModule.forRoot({
       type: 'postgres',
       host: 'red-pocket-postgres',
+      // host: 'localhost',
       port: 5432,
       database: 'micro_auth',
       username: 'postgres',

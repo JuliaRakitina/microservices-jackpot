@@ -4,6 +4,7 @@ package jackpot;
 
 service JackpotService {
   rpc CreateJackpot (CreateJackpotRequest) returns (CreateJackpotResponse) {}
+  rpc TestJackpot (TestJackpotRequest) returns (TestJackpotResponse) {}
   rpc ListAllJackpots (ListAllJackpotsRequest) returns (ListAllJackpotsResponse) {}
   rpc AddJackpotAmount (AddJackpotAmountRequest) returns (AddJackpotAmountResponse) {}
   rpc RunJackpot (RunJackpotRequest) returns (RunJackpotResponse) {}
@@ -26,6 +27,14 @@ message CreateJackpotResponse {
   int32 status = 1;
   repeated string error = 2;
   int32 id = 3;
+}
+
+
+message TestJackpotRequest {
+}
+
+message TestJackpotResponse {
+  int32 status = 1;
 }
 
 message ListAllJackpotsRequest {

@@ -1,8 +1,8 @@
-import { NestFactory } from '@nestjs/core';
-import { AppModule } from './app.module';
-import { join } from 'path';
 import { INestMicroservice, ValidationPipe } from '@nestjs/common';
+import { NestFactory } from '@nestjs/core';
 import { Transport } from '@nestjs/microservices';
+import { join } from 'path';
+import { AppModule } from './app.module';
 import { protobufPackage } from './bet/proto/bet.pb';
 
 async function bootstrap() {
@@ -22,4 +22,5 @@ async function bootstrap() {
 
   await app.listen();
 }
+
 bootstrap();

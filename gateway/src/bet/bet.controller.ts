@@ -1,6 +1,7 @@
-import { Controller, Inject, OnModuleInit } from '@nestjs/common';
+import { Controller, Get, Inject, OnModuleInit } from '@nestjs/common';
 import { ClientGrpc } from '@nestjs/microservices';
 import { BET_SERVICE_NAME, BetServiceClient } from './bet.pb';
+import { Observable } from 'rxjs';
 
 @Controller('bet')
 export class BetController implements OnModuleInit {
@@ -11,5 +12,11 @@ export class BetController implements OnModuleInit {
 
   public onModuleInit(): void {
     this.svc = this.client.getService<BetServiceClient>(BET_SERVICE_NAME);
+  }
+
+  @Get('test')
+  private async test(): Promise<Observable<any>> {
+    console.info(' JULIAAAAA');
+    return this.svc.test({});
   }
 }

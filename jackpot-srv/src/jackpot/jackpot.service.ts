@@ -1,4 +1,4 @@
-import { HttpStatus, Inject, Injectable, OnModuleInit } from '@nestjs/common';
+import { HttpStatus, Injectable } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 import { Jackpot } from './jackpot.entity';
@@ -13,6 +13,7 @@ import {
   RunJackpotResponse,
   StopActiveJackpotRequest,
   StopActiveJackpotResponse,
+  TestJackpotResponse,
   WithdrawFromJackpotRequest,
   WithdrawFromJackpotResponse,
 } from './proto/jackpot.pb';
@@ -161,6 +162,10 @@ export class JackpotService {
     jackpot.status = STATUSES.FINISHED;
     await this.repository.save(jackpot);
     return { error: null, status: HttpStatus.OK };
+  }
+
+  public testJackpot(): Promise<TestJackpotResponse> {
+    return Promise.resolve({ status: 200 });
   }
 
   private randomIntFromInterval(min, max) {

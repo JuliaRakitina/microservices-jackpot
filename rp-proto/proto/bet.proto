@@ -8,6 +8,7 @@ service BetService {
   rpc GetJackpotBetsInfoId (GetJackpotBetsInfoIdRequest) returns (GetJackpotBetsInfoIdResponse) {}
   rpc GetJackpotWinner (GetJackpotWinnerRequest) returns (GetJackpotWinnerResponse) {}
   rpc GetWonBetsByUserId (GetWonBetsByUserIdRequest) returns (GetWonBetsByUserIdResponse) {}
+  rpc Test (TestRequest) returns (TestResponse) {}
 }
 
 message BetData {
@@ -74,4 +75,11 @@ message GetWonBetsByUserIdResponse {
   int32 status = 1;
   repeated string error = 2;
   repeated BetData data = 3;
+}
+
+message TestRequest {
+}
+
+message TestResponse {
+  int32 status = 1;
 }

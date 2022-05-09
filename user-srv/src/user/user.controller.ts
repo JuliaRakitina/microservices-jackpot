@@ -6,6 +6,7 @@ import {
   DeleteUserResponse,
   GetUserByUserIdRequest,
   GetUserByUserIdResponse,
+  TestUserRequestResponse,
   UpdateUserBalanceRequest,
   UpdateUserBalanceResponse,
   USER_SERVICE_NAME,
@@ -52,5 +53,10 @@ export class UserController {
   @GrpcMethod(USER_SERVICE_NAME, 'ListAllUsers')
   private listAllUsers(): Promise<DeleteUserResponse> {
     return this.service.listAllUsers();
+  }
+
+  @GrpcMethod(USER_SERVICE_NAME, 'TestUser')
+  private testUser(): Promise<TestUserRequestResponse> {
+    return this.service.testUser();
   }
 }

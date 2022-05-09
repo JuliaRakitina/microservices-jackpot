@@ -6,8 +6,8 @@ import { JACKPOT_SERVICE_NAME, JackpotServiceClient } from './proto/jackpot.pb';
 import { ClientGrpc } from '@nestjs/microservices';
 import { USER_SERVICE_NAME, UserServiceClient } from './proto/user.pb';
 import { MakeBetRequestDto } from './bet.dto';
-import { BetData, MakeBetResponse } from './proto/bet.pb';
-import { firstValueFrom } from 'rxjs';
+import { BetData, MakeBetResponse, TestResponse } from './proto/bet.pb';
+import { firstValueFrom, Observable, of } from 'rxjs';
 
 @Injectable()
 export class BetService implements OnModuleInit {
@@ -53,5 +53,9 @@ export class BetService implements OnModuleInit {
         status: HttpStatus.INTERNAL_SERVER_ERROR,
       };
     }
+  }
+
+  public test(): Observable<TestResponse> {
+    return of({ status: 200 } as TestResponse);
   }
 }

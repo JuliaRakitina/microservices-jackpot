@@ -13,6 +13,7 @@ import { AuthService } from './auth.service';
         transport: Transport.GRPC,
         options: {
           url: `red-pocket-auth-srv:50051`,
+          // url: 'localhost:50051',
           package: AUTH_PACKAGE_NAME,
           protoPath: 'node_modules/rp-proto/proto/auth.proto',
         },

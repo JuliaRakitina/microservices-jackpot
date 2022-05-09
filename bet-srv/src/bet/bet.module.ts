@@ -15,6 +15,7 @@ import { JACKPOT_PACKAGE_NAME, JACKPOT_SERVICE_NAME } from './proto/jackpot.pb';
         transport: Transport.GRPC,
         options: {
           url: 'red-pocket-user-srv:50053',
+          // url: 'localhost:50053',
           package: USER_PACKAGE_NAME,
           protoPath: 'node_modules/rp-proto/proto/user.proto',
         },
@@ -26,6 +27,7 @@ import { JACKPOT_PACKAGE_NAME, JACKPOT_SERVICE_NAME } from './proto/jackpot.pb';
         transport: Transport.GRPC,
         options: {
           url: 'red-pocket-jackpot-srv:50054',
+          // url: 'localhost:50054',
           package: JACKPOT_PACKAGE_NAME,
           protoPath: 'node_modules/rp-proto/proto/jackpot.proto',
         },

@@ -11,6 +11,7 @@ import { JackpotController } from './jackpot.controller';
         transport: Transport.GRPC,
         options: {
           url: 'red-pocket-jackpot-srv:50054',
+          // url: 'localhost:50054',
           package: JACKPOT_PACKAGE_NAME,
           protoPath: 'node_modules/rp-proto/proto/jackpot.proto',
         },

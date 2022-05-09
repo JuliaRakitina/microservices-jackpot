@@ -11,6 +11,7 @@ import { UserController } from './user.controller';
         transport: Transport.GRPC,
         options: {
           url: 'red-pocket-user-srv:50053',
+          // url: 'localhost:50053',
           package: USER_PACKAGE_NAME,
           protoPath: 'node_modules/rp-proto/proto/user.proto',
         },

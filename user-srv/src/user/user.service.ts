@@ -10,6 +10,7 @@ import {
   GetUserByUserIdRequest,
   GetUserByUserIdResponse,
   ListAllUsersResponse,
+  TestUserRequestResponse,
   UpdateUserBalanceRequest,
   UpdateUserBalanceResponse,
   UserData,
@@ -27,6 +28,7 @@ export class UserService implements OnModuleInit {
   @Inject(AUTH_SERVICE_NAME)
   private readonly client: ClientGrpc;
   private authSvc: AuthServiceClient;
+
   public onModuleInit(): void {
     this.authSvc = this.client.getService<AuthServiceClient>(AUTH_SERVICE_NAME);
   }
@@ -104,7 +106,6 @@ export class UserService implements OnModuleInit {
     if (operation === 'subtract') {
       user.balance = user.balance - amount;
     }
-    console.info(user);
     await this.repository.save(user);
 
     return {
@@ -118,5 +119,9 @@ export class UserService implements OnModuleInit {
   public async listAllUsers(): Promise<ListAllUsersResponse> {
     const users: User[] = await this.repository.find();
     return { data: users as UserData[], error: null, status: HttpStatus.OK };
+  }
+
+  public async testUser(): Promise<TestUserRequestResponse> {
+    return Promise.resolve({ status: 1 });
   }
 }

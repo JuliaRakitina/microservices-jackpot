@@ -69,9 +69,15 @@ export interface GetWonBetsByUserIdResponse {
   data: BetData[];
 }
 
+export interface TestRequest {}
+
+export interface TestResponse {
+  status: number;
+}
+
 export const BET_PACKAGE_NAME = 'bet';
 
-export interface UserServiceClient {
+export interface BetServiceClient {
   makeBet(request: MakeBetRequest): Observable<MakeBetResponse>;
 
   getBetsByUserId(
@@ -89,9 +95,11 @@ export interface UserServiceClient {
   getWonBetsByUserId(
     request: GetWonBetsByUserIdRequest,
   ): Observable<GetWonBetsByUserIdResponse>;
+
+  test(request: TestRequest): Observable<TestResponse>;
 }
 
-export interface UserServiceController {
+export interface BetServiceController {
   makeBet(
     request: MakeBetRequest,
   ): Promise<MakeBetResponse> | Observable<MakeBetResponse> | MakeBetResponse;
@@ -123,9 +131,13 @@ export interface UserServiceController {
     | Promise<GetWonBetsByUserIdResponse>
     | Observable<GetWonBetsByUserIdResponse>
     | GetWonBetsByUserIdResponse;
+
+  test(
+    request: TestRequest,
+  ): Promise<TestResponse> | Observable<TestResponse> | TestResponse;
 }
 
-export function UserServiceControllerMethods() {
+export function BetServiceControllerMethods() {
   return function (constructor: Function) {
     const grpcMethods: string[] = [
       'makeBet',
@@ -133,13 +145,14 @@ export function UserServiceControllerMethods() {
       'getJackpotBetsInfoId',
       'getJackpotWinner',
       'getWonBetsByUserId',
+      'test',
     ];
     for (const method of grpcMethods) {
       const descriptor: any = Reflect.getOwnPropertyDescriptor(
         constructor.prototype,
         method,
       );
-      GrpcMethod('UserService', method)(
+      GrpcMethod('BetService', method)(
         constructor.prototype[method],
         method,
         descriptor,
@@ -151,7 +164,7 @@ export function UserServiceControllerMethods() {
         constructor.prototype,
         method,
       );
-      GrpcStreamMethod('UserService', method)(
+      GrpcStreamMethod('BetService', method)(
         constructor.prototype[method],
         method,
         descriptor,
@@ -160,7 +173,7 @@ export function UserServiceControllerMethods() {
   };
 }
 
-export const USER_SERVICE_NAME = 'UserService';
+export const BET_SERVICE_NAME = 'BetService';
 
 if (_m0.util.Long !== Long) {
   _m0.util.Long = Long as any;

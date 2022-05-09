@@ -21,6 +21,7 @@ import {
   GetUserByUserIdResponse,
   ListAllUsersRequest,
   ListAllUsersResponse,
+  TestUserRequestResponse,
   UpdateUserBalanceRequest,
   UpdateUserBalanceResponse,
   USER_SERVICE_NAME,
@@ -108,5 +109,10 @@ export class UserController implements OnModuleInit {
         data: null,
       });
     }
+  }
+
+  @Get('test')
+  private async testUser(): Promise<Observable<TestUserRequestResponse>> {
+    return this.svc.testUser(1);
   }
 }
