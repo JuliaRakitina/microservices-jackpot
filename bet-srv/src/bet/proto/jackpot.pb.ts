@@ -22,12 +22,6 @@ export interface CreateJackpotResponse {
   id: number;
 }
 
-export interface TestJackpotRequest {}
-
-export interface TestJackpotResponse {
-  status: number;
-}
-
 export interface ListAllJackpotsRequest {}
 
 export interface ListAllJackpotsResponse {
@@ -94,8 +88,6 @@ export interface JackpotServiceClient {
     request: CreateJackpotRequest,
   ): Observable<CreateJackpotResponse>;
 
-  testJackpot(request: TestJackpotRequest): Observable<TestJackpotResponse>;
-
   listAllJackpots(
     request: ListAllJackpotsRequest,
   ): Observable<ListAllJackpotsResponse>;
@@ -126,13 +118,6 @@ export interface JackpotServiceController {
     | Promise<CreateJackpotResponse>
     | Observable<CreateJackpotResponse>
     | CreateJackpotResponse;
-
-  testJackpot(
-    request: TestJackpotRequest,
-  ):
-    | Promise<TestJackpotResponse>
-    | Observable<TestJackpotResponse>
-    | TestJackpotResponse;
 
   listAllJackpots(
     request: ListAllJackpotsRequest,
@@ -181,7 +166,6 @@ export function JackpotServiceControllerMethods() {
   return function (constructor: Function) {
     const grpcMethods: string[] = [
       'createJackpot',
-      'testJackpot',
       'listAllJackpots',
       'addJackpotAmount',
       'runJackpot',

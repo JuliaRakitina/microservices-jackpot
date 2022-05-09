@@ -5,10 +5,9 @@ package bet;
 service BetService {
   rpc MakeBet (MakeBetRequest) returns (MakeBetResponse) {}
   rpc GetBetsByUserId (GetBetsByUserIdRequest) returns (GetBetsByUserIdResponse) {}
-  rpc GetJackpotBetsInfoId (GetJackpotBetsInfoIdRequest) returns (GetJackpotBetsInfoIdResponse) {}
+  rpc GetJackpotBetsInfoById (GetJackpotBetsInfoByIdRequest) returns (GetJackpotBetsInfoByIdResponse) {}
   rpc GetJackpotWinner (GetJackpotWinnerRequest) returns (GetJackpotWinnerResponse) {}
   rpc GetWonBetsByUserId (GetWonBetsByUserIdRequest) returns (GetWonBetsByUserIdResponse) {}
-  rpc Test (TestRequest) returns (TestResponse) {}
 }
 
 message BetData {
@@ -44,11 +43,11 @@ message GetBetsByUserIdResponse {
 }
 
 
-message GetJackpotBetsInfoIdRequest {
-  int32 userId = 1;
+message GetJackpotBetsInfoByIdRequest {
+  int32 id = 1;
 }
 
-message GetJackpotBetsInfoIdResponse {
+message GetJackpotBetsInfoByIdResponse {
   int32 status = 1;
   repeated string error = 2;
   repeated BetData data = 3;
@@ -62,8 +61,8 @@ message GetJackpotWinnerResponse {
   int32 status = 1;
   repeated string error = 2;
   string jackpotStatus = 3;
-  string userId = 4;
-  string bet = 5;
+  int32 userId = 4;
+  int32 bet = 5;
 }
 
 
@@ -75,11 +74,4 @@ message GetWonBetsByUserIdResponse {
   int32 status = 1;
   repeated string error = 2;
   repeated BetData data = 3;
-}
-
-message TestRequest {
-}
-
-message TestResponse {
-  int32 status = 1;
 }

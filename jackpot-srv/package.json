@@ -21,7 +21,9 @@
     "test:e2e": "jest --config ./test/jest-e2e.json",
     "proto:install": "npm i ../rp-proto/",
     "proto:jackpot": "protoc --plugin=node_modules/.bin/protoc-gen-ts_proto -I=./node_modules/rp-proto/proto --ts_proto_out=src/jackpot/proto/ node_modules/rp-proto/proto/jackpot.proto --ts_proto_opt=nestJs=true --ts_proto_opt=fileSuffix=.pb --ts_proto_opt=esModuleInterop=true",
-    "proto:all": "npm run proto:jackpot"
+    "proto:user": "protoc --plugin=node_modules/.bin/protoc-gen-ts_proto -I=./node_modules/rp-proto/proto --ts_proto_out=src/jackpot/proto/ node_modules/rp-proto/proto/user.proto --ts_proto_opt=nestJs=true --ts_proto_opt=fileSuffix=.pb --ts_proto_opt=esModuleInterop=true",
+    "proto:bet": "protoc --plugin=node_modules/.bin/protoc-gen-ts_proto -I=./node_modules/rp-proto/proto --ts_proto_out=src/jackpot/proto/ node_modules/rp-proto/proto/bet.proto --ts_proto_opt=nestJs=true --ts_proto_opt=fileSuffix=.pb --ts_proto_opt=esModuleInterop=true",
+    "proto:all": "npm run proto:jackpot && npm run proto:user && npm run proto:bet "
   },
   "dependencies": {
     "@grpc/grpc-js": "^1.6.7",

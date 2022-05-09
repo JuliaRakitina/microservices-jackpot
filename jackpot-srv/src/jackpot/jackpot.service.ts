@@ -1,4 +1,4 @@
-import { HttpStatus, Injectable } from '@nestjs/common';
+import { HttpStatus, Inject, Injectable, OnModuleInit } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 import { Jackpot } from './jackpot.entity';
@@ -13,16 +13,35 @@ import {
   RunJackpotResponse,
   StopActiveJackpotRequest,
   StopActiveJackpotResponse,
-  TestJackpotResponse,
   WithdrawFromJackpotRequest,
   WithdrawFromJackpotResponse,
+  GetJackpotByIdResponse,
 } from './proto/jackpot.pb';
 import { STATUSES } from './utils';
+import { GetJackpotByIdRequestDto } from './jackpot.dto';
+import { BET_SERVICE_NAME, BetServiceClient } from './proto/bet.pb';
+import { ClientGrpc } from '@nestjs/microservices';
+import { USER_SERVICE_NAME, UserServiceClient } from './proto/user.pb';
+import { firstValueFrom } from 'rxjs';
 
 @Injectable()
-export class JackpotService {
+export class JackpotService implements OnModuleInit {
   @InjectRepository(Jackpot)
   private readonly repository: Repository<Jackpot>;
+
+  @Inject(BET_SERVICE_NAME)
+  private readonly betClient: ClientGrpc;
+  private betSvc: BetServiceClient;
+
+  @Inject(USER_SERVICE_NAME)
+  private readonly userClient: ClientGrpc;
+  private userSvc: UserServiceClient;
+
+  public onModuleInit(): void {
+    this.betSvc = this.betClient.getService<BetServiceClient>(BET_SERVICE_NAME);
+    this.userSvc =
+      this.userClient.getService<UserServiceClient>(USER_SERVICE_NAME);
+  }
 
   public async createJackpot({
     seed,
@@ -71,6 +90,8 @@ export class JackpotService {
       jackpot.status = STATUSES.WON;
     }
 
+    await this.repository.save(jackpot);
+
     return {
       id: jackpot.id,
       amount: jackpot.amount,
@@ -96,11 +117,39 @@ export class JackpotService {
     if (jackpot.status != STATUSES.WON) {
       return {
         error: ['Jackpot is not won'],
-        status: HttpStatus.NOT_FOUND,
+        status: HttpStatus.NOT_ACCEPTABLE,
       };
     }
-    jackpot.amount = jackpot.amount - amount;
-    //TODO check USERid
+    if (jackpot.amount < amount) {
+      return {
+        error: ['Not sufficient funds'],
+        status: HttpStatus.NOT_ACCEPTABLE,
+      };
+    }
+
+    const winner = await firstValueFrom(
+      this.betSvc.getJackpotWinner({ jackpotId: jackpot.id }),
+    );
+
+    if (winner.userId === userId) {
+      jackpot.amount = jackpot.amount - amount;
+      const updatedUserBalance = await firstValueFrom(
+        this.userSvc.updateUserBalance({ userId, operation: 'add', amount }),
+      );
+      await this.repository.save(jackpot);
+      if (updatedUserBalance.status == HttpStatus.OK) {
+        return {
+          error: [null],
+          status: HttpStatus.OK,
+        };
+      }
+    } else {
+      return {
+        error: ['You are not a winner'],
+        status: HttpStatus.NOT_ACCEPTABLE,
+      };
+    }
+
     const newJackpot = await this.repository.save(jackpot);
     if (newJackpot) {
     } else {
@@ -142,6 +191,21 @@ export class JackpotService {
     return { error: null, status: HttpStatus.OK };
   }
 
+  public async getJackpotById({
+    id,
+  }: GetJackpotByIdRequestDto): Promise<GetJackpotByIdResponse> {
+    const jackpot: Jackpot = await this.repository.findOne({ where: { id } });
+
+    if (!jackpot) {
+      return {
+        error: ['Jackpot not found'],
+        status: HttpStatus.NOT_FOUND,
+        data: null,
+      };
+    }
+    return { data: jackpot, error: null, status: HttpStatus.OK };
+  }
+
   public async stopActiveJackpot({
     id,
   }: StopActiveJackpotRequest): Promise<StopActiveJackpotResponse> {
@@ -162,10 +226,6 @@ export class JackpotService {
     jackpot.status = STATUSES.FINISHED;
     await this.repository.save(jackpot);
     return { error: null, status: HttpStatus.OK };
-  }
-
-  public testJackpot(): Promise<TestJackpotResponse> {
-    return Promise.resolve({ status: 200 });
   }
 
   private randomIntFromInterval(min, max) {

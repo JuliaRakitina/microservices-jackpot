@@ -1,7 +1,7 @@
 import { IsNumber, Min } from 'class-validator';
 import {
   GetBetsByUserIdRequest,
-  GetJackpotBetsInfoIdRequest,
+  GetJackpotBetsInfoByIdRequest,
   GetJackpotWinnerRequest,
   GetWonBetsByUserIdRequest,
   MakeBetRequest,
@@ -24,11 +24,11 @@ export class GetBetsByUserIdRequestDto implements GetBetsByUserIdRequest {
   public userId: number;
 }
 
-export class GetJackpotBetsInfoIdRequestDto
-  implements GetJackpotBetsInfoIdRequest
+export class GetJackpotBetsInfoByIdRequestDto
+  implements GetJackpotBetsInfoByIdRequest
 {
   @IsNumber()
-  public userId: number;
+  public id: number;
 }
 
 export class GetJackpotWinnerRequestDto implements GetJackpotWinnerRequest {

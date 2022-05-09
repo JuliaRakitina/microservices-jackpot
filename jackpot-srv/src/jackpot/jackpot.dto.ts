@@ -6,6 +6,7 @@ import {
   RunJackpotRequest,
   StopActiveJackpotRequest,
   WithdrawFromJackpotRequest,
+  GetJackpotByIdRequest,
 } from './proto/jackpot.pb';
 
 export class CreateJackpotRequestDto implements CreateJackpotRequest {
@@ -27,6 +28,11 @@ export class StopActiveJackpotRequestDto implements StopActiveJackpotRequest {
 }
 
 export class RunJackpotRequestDto implements RunJackpotRequest {
+  @IsNumber()
+  public id: number;
+}
+
+export class GetJackpotByIdRequestDto implements GetJackpotByIdRequest {
   @IsNumber()
   public id: number;
 }

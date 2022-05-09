@@ -37,11 +37,11 @@ export interface GetBetsByUserIdResponse {
   data: BetData[];
 }
 
-export interface GetJackpotBetsInfoIdRequest {
-  userId: number;
+export interface GetJackpotBetsInfoByIdRequest {
+  id: number;
 }
 
-export interface GetJackpotBetsInfoIdResponse {
+export interface GetJackpotBetsInfoByIdResponse {
   status: number;
   error: string[];
   data: BetData[];
@@ -55,8 +55,8 @@ export interface GetJackpotWinnerResponse {
   status: number;
   error: string[];
   jackpotStatus: string;
-  userId: string;
-  bet: string;
+  userId: number;
+  bet: number;
 }
 
 export interface GetWonBetsByUserIdRequest {
@@ -69,12 +69,6 @@ export interface GetWonBetsByUserIdResponse {
   data: BetData[];
 }
 
-export interface TestRequest {}
-
-export interface TestResponse {
-  status: number;
-}
-
 export const BET_PACKAGE_NAME = 'bet';
 
 export interface BetServiceClient {
@@ -84,9 +78,9 @@ export interface BetServiceClient {
     request: GetBetsByUserIdRequest,
   ): Observable<GetBetsByUserIdResponse>;
 
-  getJackpotBetsInfoId(
-    request: GetJackpotBetsInfoIdRequest,
-  ): Observable<GetJackpotBetsInfoIdResponse>;
+  getJackpotBetsInfoById(
+    request: GetJackpotBetsInfoByIdRequest,
+  ): Observable<GetJackpotBetsInfoByIdResponse>;
 
   getJackpotWinner(
     request: GetJackpotWinnerRequest,
@@ -95,8 +89,6 @@ export interface BetServiceClient {
   getWonBetsByUserId(
     request: GetWonBetsByUserIdRequest,
   ): Observable<GetWonBetsByUserIdResponse>;
-
-  test(request: TestRequest): Observable<TestResponse>;
 }
 
 export interface BetServiceController {
@@ -111,12 +103,12 @@ export interface BetServiceController {
     | Observable<GetBetsByUserIdResponse>
     | GetBetsByUserIdResponse;
 
-  getJackpotBetsInfoId(
-    request: GetJackpotBetsInfoIdRequest,
+  getJackpotBetsInfoById(
+    request: GetJackpotBetsInfoByIdRequest,
   ):
-    | Promise<GetJackpotBetsInfoIdResponse>
-    | Observable<GetJackpotBetsInfoIdResponse>
-    | GetJackpotBetsInfoIdResponse;
+    | Promise<GetJackpotBetsInfoByIdResponse>
+    | Observable<GetJackpotBetsInfoByIdResponse>
+    | GetJackpotBetsInfoByIdResponse;
 
   getJackpotWinner(
     request: GetJackpotWinnerRequest,
@@ -131,10 +123,6 @@ export interface BetServiceController {
     | Promise<GetWonBetsByUserIdResponse>
     | Observable<GetWonBetsByUserIdResponse>
     | GetWonBetsByUserIdResponse;
-
-  test(
-    request: TestRequest,
-  ): Promise<TestResponse> | Observable<TestResponse> | TestResponse;
 }
 
 export function BetServiceControllerMethods() {
@@ -142,10 +130,9 @@ export function BetServiceControllerMethods() {
     const grpcMethods: string[] = [
       'makeBet',
       'getBetsByUserId',
-      'getJackpotBetsInfoId',
+      'getJackpotBetsInfoById',
       'getJackpotWinner',
       'getWonBetsByUserId',
-      'test',
     ];
     for (const method of grpcMethods) {
       const descriptor: any = Reflect.getOwnPropertyDescriptor(

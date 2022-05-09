@@ -4,17 +4,18 @@ import { JackpotService } from './jackpot.service';
 import {
   AddJackpotAmountResponse,
   CreateJackpotResponse,
+  GetJackpotByIdResponse,
   JACKPOT_SERVICE_NAME,
   ListAllJackpotsRequest,
   ListAllJackpotsResponse,
   RunJackpotResponse,
   StopActiveJackpotResponse,
-  TestJackpotResponse,
   WithdrawFromJackpotResponse,
 } from './proto/jackpot.pb';
 import {
   AddJackpotAmountRequestDto,
   CreateJackpotRequestDto,
+  GetJackpotByIdRequestDto,
   RunJackpotRequestDto,
   StopActiveJackpotRequestDto,
   WithdrawFromJackpotRequestDto,
@@ -25,16 +26,18 @@ export class JackpotController {
   @Inject(JackpotService)
   private readonly service: JackpotService;
 
-  @GrpcMethod(JACKPOT_SERVICE_NAME, 'TestJackpot')
-  private testJackpot(): Promise<TestJackpotResponse> {
-    return this.service.testJackpot();
-  }
-
   @GrpcMethod(JACKPOT_SERVICE_NAME, 'CreateJackpot')
   private async createJackpot(
     data: CreateJackpotRequestDto,
   ): Promise<CreateJackpotResponse> {
     return this.service.createJackpot(data);
+  }
+
+  @GrpcMethod(JACKPOT_SERVICE_NAME, 'GetJackpotById')
+  private async getJackpotById(
+    data: GetJackpotByIdRequestDto,
+  ): Promise<GetJackpotByIdResponse> {
+    return this.service.getJackpotById(data);
   }
 
   @GrpcMethod(JACKPOT_SERVICE_NAME, 'AddJackpotAmount')

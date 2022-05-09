@@ -22,12 +22,6 @@ export interface CreateJackpotResponse {
   id: number;
 }
 
-export interface TestJackpotRequest {}
-
-export interface TestJackpotResponse {
-  status: number;
-}
-
 export interface ListAllJackpotsRequest {}
 
 export interface ListAllJackpotsResponse {
@@ -56,6 +50,16 @@ export interface RunJackpotRequest {
 export interface RunJackpotResponse {
   status: number;
   error: string[];
+}
+
+export interface GetJackpotByIdRequest {
+  id: number;
+}
+
+export interface GetJackpotByIdResponse {
+  status: number;
+  error: string[];
+  data: JackpotData | undefined;
 }
 
 export interface StopActiveJackpotRequest {
@@ -94,8 +98,6 @@ export interface JackpotServiceClient {
     request: CreateJackpotRequest,
   ): Observable<CreateJackpotResponse>;
 
-  testJackpot(request: TestJackpotRequest): Observable<TestJackpotResponse>;
-
   listAllJackpots(
     request: ListAllJackpotsRequest,
   ): Observable<ListAllJackpotsResponse>;
@@ -105,6 +107,10 @@ export interface JackpotServiceClient {
   ): Observable<AddJackpotAmountResponse>;
 
   runJackpot(request: RunJackpotRequest): Observable<RunJackpotResponse>;
+
+  getJackpotById(
+    request: GetJackpotByIdRequest,
+  ): Observable<GetJackpotByIdResponse>;
 
   stopActiveJackpot(
     request: StopActiveJackpotRequest,
@@ -127,13 +133,6 @@ export interface JackpotServiceController {
     | Observable<CreateJackpotResponse>
     | CreateJackpotResponse;
 
-  testJackpot(
-    request: TestJackpotRequest,
-  ):
-    | Promise<TestJackpotResponse>
-    | Observable<TestJackpotResponse>
-    | TestJackpotResponse;
-
   listAllJackpots(
     request: ListAllJackpotsRequest,
   ):
@@ -154,6 +153,13 @@ export interface JackpotServiceController {
     | Promise<RunJackpotResponse>
     | Observable<RunJackpotResponse>
     | RunJackpotResponse;
+
+  getJackpotById(
+    request: GetJackpotByIdRequest,
+  ):
+    | Promise<GetJackpotByIdResponse>
+    | Observable<GetJackpotByIdResponse>
+    | GetJackpotByIdResponse;
 
   stopActiveJackpot(
     request: StopActiveJackpotRequest,
@@ -181,10 +187,10 @@ export function JackpotServiceControllerMethods() {
   return function (constructor: Function) {
     const grpcMethods: string[] = [
       'createJackpot',
-      'testJackpot',
       'listAllJackpots',
       'addJackpotAmount',
       'runJackpot',
+      'getJackpotById',
       'stopActiveJackpot',
       'deleteJackpot',
       'withdrawFromJackpot',
