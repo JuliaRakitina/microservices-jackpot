@@ -1,4 +1,5 @@
-## RED POCKET HOME ASSIGNMENT
+## Microservices 
+### Mystery Jackpot
 
 
 Repository includes 4 microservices, gateway, postman collection, diagram
