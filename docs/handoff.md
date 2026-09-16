@@ -1,12 +1,11 @@
-# Modernization handoff
+# Modernization record
 
-## Preservation and branch
+## Preservation and integration
 
-- Branch: `codex/2026-hardening`.
-- [Draft PR #1](https://github.com/JuliaRakitina/microservices-jackpot/pull/1); not merged.
-- Base/default-branch SHA: `1789b56222b134c4f2e464feb7076f1d14c040e5`.
+- The 2026 modernization was merged into `main` through [PR #1](https://github.com/JuliaRakitina/microservices-jackpot/pull/1) on September 16, 2026.
+- Original default-branch baseline: `1789b56222b134c4f2e464feb7076f1d14c040e5`.
 - Original May implementation: `261982a4acae77faf9aa72d28f86d0b6857c9693`, annotated tag `original-2022-submission`.
-- All 17 original commits, including the base, remain byte-for-byte unchanged. No license was added, and no merge was performed.
+- All 17 original commits, including the baseline, remain byte-for-byte unchanged. No license was added.
 - Modernization commits use `Julia Rakitina <julia.rakitina@gmail.com>` as both author and committer; the annotated tag uses the same personal tagger identity. The authorship correction preserved commit trees, messages, dates and order, as well as the tag target and annotation.
 
 ## Modernization commits before the event-contract follow-up
@@ -41,7 +40,7 @@ Local clean install, formatting, lint, strict build/typecheck, protobuf lint/reg
 
 `npm audit` reported zero vulnerabilities. Pinned Gitleaks 8.30.1 reported zero current-tree findings with default rules; a separate location-only heuristic scan also passed. Original history still contains obsolete literals; never reuse them. A transitive glob deprecation warning remains without a reported advisory.
 
-The CI workflow runs the same checks and a separate clean Compose/demo job. Its GitHub result is reported with the draft PR; local passing checks alone do not establish remote CI success.
+The CI workflow runs the same checks and a separate clean Compose/demo job. The `main` run for merge commit `c7e6789` completed successfully: [CI #35140045554](https://github.com/JuliaRakitina/microservices-jackpot/actions/runs/35140045554).
 
 ## Migration and behavior changes
 

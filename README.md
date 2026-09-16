@@ -1,5 +1,7 @@
 # Jackpot: a distributed points simulator
 
+[![CI](https://github.com/JuliaRakitina/microservices-jackpot/actions/workflows/ci.yml/badge.svg?branch=main)](https://github.com/JuliaRakitina/microservices-jackpot/actions/workflows/ci.yml)
+
 Originally implemented in May 2022 as a hiring assessment. The original commit history is preserved; the current version adds production-oriented reliability, security, observability, and concurrency hardening.
 
 An API gateway and four services make one small problem concrete: **debit a stake, update a shared pool, and credit a winner despite concurrent requests, retries, and outages.**
@@ -9,8 +11,8 @@ An API gateway and four services make one small problem concrete: **debit a stak
 ## The two versions
 
 - **2022 implementation:** annotated tag `original-2022-submission`, commit `261982a4acae77faf9aa72d28f86d0b6857c9693` (May 10).
-- **Starting default branch:** `1789b56222b134c4f2e464feb7076f1d14c040e5` (October 13 README update).
-- **2026 hardening:** new commits on `codex/2026-hardening`. History and authorship are retained. [Original diagram and sanitized Postman collection](docs/original-2022/README.md) are explicitly historical.
+- **2022 default-branch baseline:** `1789b56222b134c4f2e464feb7076f1d14c040e5` (October 13 README update).
+- **2026 hardening:** merged into `main` through [PR #1](https://github.com/JuliaRakitina/microservices-jackpot/pull/1). The original history and authorship are retained. [Original diagram and sanitized Postman collection](docs/original-2022/README.md) are explicitly historical.
 
 ## Run it
 
