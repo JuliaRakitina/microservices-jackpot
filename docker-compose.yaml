@@ -1,158 +1,192 @@
-version: '3.7'
+name: ${COMPOSE_PROJECT_NAME:-jackpot-reference}
 
-networks:
-  red-pocket-dev:
-    driver: bridge
+x-app: &app
+  image: ${COMPOSE_PROJECT_NAME:-jackpot-reference}-app:local
+  pull_policy: never
+  working_dir: /app
+  init: true
+  restart: unless-stopped
+  read_only: true
+  tmpfs:
+    - /tmp
+  security_opt:
+    - no-new-privileges:true
+  cap_drop:
+    - ALL
+  stop_grace_period: 20s
+  healthcheck:
+    test:
+      [
+        'CMD',
+        'node',
+        '-e',
+        "fetch('http://127.0.0.1:3000/ready',{signal:AbortSignal.timeout(3000)}).then(r=>process.exit(r.ok?0:1)).catch(()=>process.exit(1))",
+      ]
+    interval: 5s
+    timeout: 4s
+    start_period: 15s
+    retries: 24
+  networks:
+    - backend
+
+x-env: &app-env
+  NODE_ENV: production
+  HTTP_PORT: '3000'
+  GRPC_PORT: '50051'
+  INTERNAL_TOKEN: ${INTERNAL_TOKEN:?Run npm run setup}
+  AUTH_ADDR: auth:50051
+  USERS_ADDR: users:50051
+  BETS_ADDR: bets:50051
+  JACKPOT_ADDR: jackpot:50051
+  OTEL_EXPORTER_OTLP_ENDPOINT: ${OTEL_EXPORTER_OTLP_ENDPOINT:-}
+
+x-dependencies: &dependencies
+  postgres:
+    condition: service_healthy
+  rabbitmq:
+    condition: service_healthy
 
 services:
-  red-pocket-auth-srv:
-    container_name: red-pocket-auth-srv
+  postgres:
+    image: postgres:17.11-bookworm@sha256:051f7b7b3abdd564d5d1bd1e8c4b9c1b6e77087d1dd22020ede611c096a272e0
+    restart: unless-stopped
+    environment:
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:?Run npm run setup}
+      AUTH_DB_PASSWORD: ${AUTH_DB_PASSWORD:?Run npm run setup}
+      USERS_DB_PASSWORD: ${USERS_DB_PASSWORD:?Run npm run setup}
+      BETS_DB_PASSWORD: ${BETS_DB_PASSWORD:?Run npm run setup}
+      JACKPOT_DB_PASSWORD: ${JACKPOT_DB_PASSWORD:?Run npm run setup}
+    volumes:
+      - postgres-data:/var/lib/postgresql/data
+      - ./infrastructure/postgres/init.sh:/docker-entrypoint-initdb.d/10-databases.sh:ro
+    healthcheck:
+      test: ['CMD-SHELL', 'pg_isready -h 127.0.0.1 -U postgres -d postgres']
+      interval: 3s
+      timeout: 3s
+      retries: 30
+    networks:
+      - backend
+
+  rabbitmq:
+    image: rabbitmq:4.3.5-management@sha256:57bddb6fbc3498b5d8b5a14dc6f4506073ebcf94c66ba2a7678c335faa8dd631
+    hostname: rabbitmq
+    restart: unless-stopped
+    environment:
+      RABBITMQ_DEFAULT_USER: jackpot
+      RABBITMQ_DEFAULT_PASS: ${BROKER_PASSWORD:?Run npm run setup}
+      RABBITMQ_DEFAULT_VHOST: jackpot
+    volumes:
+      - rabbitmq-data:/var/lib/rabbitmq
+      - ./infrastructure/rabbitmq/rabbitmq.conf:/etc/rabbitmq/rabbitmq.conf:ro
+    healthcheck:
+      test: ['CMD', 'rabbitmq-diagnostics', '-q', 'check_port_connectivity']
+      interval: 5s
+      timeout: 10s
+      retries: 24
+      start_period: 15s
+    networks:
+      - backend
+
+  auth:
+    <<: *app
+    command: ['node', 'dist/apps/auth/src/main.js']
+    environment:
+      <<: *app-env
+      SERVICE_NAME: auth
+      OTEL_SERVICE_NAME: jackpot-auth
+      JWT_SECRET: ${JWT_SECRET:?Run npm run setup}
+      DATABASE_URL: postgresql://jackpot_auth:${AUTH_DB_PASSWORD:?Run npm run setup}@postgres:5432/jackpot_auth
+      BROKER_URL: amqp://jackpot:${BROKER_PASSWORD:?Run npm run setup}@rabbitmq:5672/jackpot
+    depends_on: *dependencies
+
+  users:
+    <<: *app
+    command: ['node', 'dist/apps/users/src/main.js']
+    environment:
+      <<: *app-env
+      SERVICE_NAME: users
+      OTEL_SERVICE_NAME: jackpot-users
+      DATABASE_URL: postgresql://jackpot_users:${USERS_DB_PASSWORD:?Run npm run setup}@postgres:5432/jackpot_users
+      BROKER_URL: amqp://jackpot:${BROKER_PASSWORD:?Run npm run setup}@rabbitmq:5672/jackpot
+    depends_on: *dependencies
+
+  bets:
+    <<: *app
+    command: ['node', 'dist/apps/bets/src/main.js']
+    environment:
+      <<: *app-env
+      SERVICE_NAME: bets
+      OTEL_SERVICE_NAME: jackpot-bets
+      DATABASE_URL: postgresql://jackpot_bets:${BETS_DB_PASSWORD:?Run npm run setup}@postgres:5432/jackpot_bets
+      BROKER_URL: amqp://jackpot:${BROKER_PASSWORD:?Run npm run setup}@rabbitmq:5672/jackpot
+    depends_on: *dependencies
+
+  jackpot:
+    <<: *app
+    command: ['node', 'dist/apps/jackpot/src/main.js']
+    environment:
+      <<: *app-env
+      SERVICE_NAME: jackpot
+      OTEL_SERVICE_NAME: jackpot-pool
+      DATABASE_URL: postgresql://jackpot_jackpot:${JACKPOT_DB_PASSWORD:?Run npm run setup}@postgres:5432/jackpot_jackpot
+      BROKER_URL: amqp://jackpot:${BROKER_PASSWORD:?Run npm run setup}@rabbitmq:5672/jackpot
+    depends_on: *dependencies
+
+  gateway:
+    <<: *app
     build:
       context: .
-      dockerfile: auth-srv/Dockerfile
-      network: host
+      target: runtime
+    command: ['node', 'dist/apps/gateway/src/main.js']
     environment:
-      - NODE_ENV=dev
-    command: npm run start:dev
-    env_file:
-      - .env
+      <<: *app-env
+      SERVICE_NAME: gateway
+      OTEL_SERVICE_NAME: jackpot-gateway
     ports:
-      - ${AUTH_APP_PORT}:${AUTH_APP_PORT}
-    volumes:
-      - ./auth-srv:/app
-      - ./rp-proto:/app/rp-proto
-      - /app/dist
-      - /app/node_modules
-      - npm-cache:/root/.npm
-      - ts-cache:/root/.ts-node
-    working_dir: /app
-    networks:
-      - red-pocket-dev
+      - '127.0.0.1:${GATEWAY_PORT:-3000}:3000'
     depends_on:
-      - red-pocket-postgres
+      auth:
+        condition: service_healthy
+      users:
+        condition: service_healthy
+      bets:
+        condition: service_healthy
+      jackpot:
+        condition: service_healthy
 
-  red-pocket-gateway:
-    container_name: red-pocket-gateway
-    build:
-      context: .
-      dockerfile: gateway/Dockerfile
-      network: host
+  seed-admin:
+    <<: *app
+    profiles: ['tools']
+    restart: 'no'
+    command: ['npm', 'run', 'seed:admin']
+    healthcheck:
+      disable: true
     environment:
-      - NODE_ENV=dev
-    command: npm run start:dev
-    env_file:
-      - .env
-    ports:
-      - ${GATEWAY_APP_PORT}:${GATEWAY_APP_PORT}
-    volumes:
-      - ./gateway:/app
-      - ./rp-proto:/app/rp-proto
-      - /app/dist
-      - /app/node_modules
-      - npm-cache:/root/.npm
-      - ts-cache:/root/.ts-node
-    working_dir: /app
-    networks:
-      - red-pocket-dev
-
-  red-pocket-user-srv:
-    container_name: red-pocket-user-srv
-    build:
-      context: .
-      dockerfile: user-srv/Dockerfile
-      network: host
-    environment:
-      - NODE_ENV=dev
-    command: npm run start:dev
-    env_file:
-      - .env
-    ports:
-      - ${USER_APP_PORT}:${USER_APP_PORT}
-    volumes:
-      - ./user-srv:/app
-      - ./rp-proto:/app/rp-proto
-      - /app/dist
-      - /app/node_modules
-      - npm-cache:/root/.npm
-      - ts-cache:/root/.ts-node
-    working_dir: /app
-    networks:
-      - red-pocket-dev
+      <<: *app-env
+      SERVICE_NAME: gateway
+      AUTH_DATABASE_URL: postgresql://jackpot_auth:${AUTH_DB_PASSWORD:?Run npm run setup}@postgres:5432/jackpot_auth
+      USERS_DATABASE_URL: postgresql://jackpot_users:${USERS_DB_PASSWORD:?Run npm run setup}@postgres:5432/jackpot_users
+      JWT_SECRET: ${JWT_SECRET:?Run npm run setup}
     depends_on:
-      - red-pocket-postgres
+      auth:
+        condition: service_healthy
+      users:
+        condition: service_healthy
 
-  red-pocket-jackpot-srv:
-    container_name: red-pocket-jackpot-srv
-    build:
-      context: .
-      dockerfile: jackpot-srv/Dockerfile
-      network: host
-    environment:
-      - NODE_ENV=dev
-    command: npm run start:dev
-    env_file:
-      - .env
+  jaeger:
+    image: jaegertracing/jaeger:2.21.0@sha256:3d0ac795ff98aa04d1be04311d2dac6c25b4bfc8322dc02e53bc5b170c5018c3
+    profiles: ['tracing']
+    restart: unless-stopped
     ports:
-      - ${JACKPOT_APP_PORT}:${JACKPOT_APP_PORT}
-    volumes:
-      - ./jackpot-srv:/app
-      - ./rp-proto:/app/rp-proto
-      - /app/dist
-      - /app/node_modules
-      - npm-cache:/root/.npm
-      - ts-cache:/root/.ts-node
-    working_dir: /app
+      - '127.0.0.1:16686:16686'
     networks:
-      - red-pocket-dev
-    depends_on:
-      - red-pocket-postgres
+      - backend
 
-  red-pocket-bet-srv:
-    container_name: red-pocket-bet-srv
-    build:
-      context: .
-      dockerfile: bet-srv/Dockerfile
-      network: host
-    environment:
-      - NODE_ENV=dev
-    command: npm run start:dev
-    env_file:
-      - .env
-    ports:
-      - ${BETS_APP_PORT}:${BETS_APP_PORT}
-    volumes:
-      - ./bet-srv:/app
-      - ./rp-proto:/app/rp-proto
-      - /app/dist
-      - /app/node_modules
-      - npm-cache:/root/.npm
-      - ts-cache:/root/.ts-node
-    working_dir: /app
-    networks:
-      - red-pocket-dev
-    depends_on:
-      - red-pocket-postgres
-
-  red-pocket-postgres:
-    container_name: red-pocket-postgres
-    image: postgres:13
-    restart: always
-    environment:
-      PGDATA: /var/lib/postgresql/data
-      POSTGRES_USER: ${DB_USER}
-      POSTGRES_PASSWORD: ${DB_PASSWORD}
-    ports:
-      - ${DB_OUT_PORT}:${DB_PORT}
-    volumes:
-      - postgres-red-pocket:/var/lib/postgresql/data
-      - ./db:/docker-entrypoint-initdb.d/
-    networks:
-      - red-pocket-dev
+networks:
+  backend:
+    driver: bridge
 
 volumes:
-  postgres-red-pocket:
-    driver: local
-  npm-cache:
-    driver: local
-  ts-cache:
-    driver: local
+  postgres-data:
+  rabbitmq-data:

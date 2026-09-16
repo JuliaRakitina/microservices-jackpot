@@ -1,0 +1,69 @@
+{
+  "name": "jackpot-reference",
+  "version": "1.0.0",
+  "private": true,
+  "type": "module",
+  "engines": {
+    "node": ">=24 <25"
+  },
+  "workspaces": [
+    "apps/*",
+    "packages/*"
+  ],
+  "scripts": {
+    "build": "tsc -p tsconfig.json",
+    "typecheck": "tsc --noEmit",
+    "lint": "eslint apps packages tests scripts",
+    "format": "prettier --write apps packages tests scripts *.json *.yaml .github docs README.md",
+    "format:check": "prettier --check apps packages tests scripts *.json *.yaml .github docs README.md",
+    "test": "npm run build && node --test dist/tests/unit/*.test.js",
+    "test:integration": "npm run build && node --test --test-concurrency=1 dist/tests/integration/*.test.js",
+    "test:e2e": "npm run build && node --test --test-concurrency=1 dist/tests/e2e/*.test.js",
+    "test:resilience": "npm run build && node --test --test-concurrency=1 dist/tests/resilience/*.test.js",
+    "contracts:generate": "buf generate",
+    "contracts:lint": "buf lint",
+    "contracts:check": "npm run contracts:lint && npm run contracts:generate && git diff --exit-code -- packages/contracts/src/generated",
+    "setup": "node scripts/setup.mjs",
+    "demo": "node scripts/demo.mjs",
+    "seed:admin": "node dist/scripts/seed-admin.js",
+    "scan:secrets": "node scripts/scan-secrets.mjs",
+    "test:contracts": "npm run build && node --test dist/tests/contracts/*.test.js",
+    "replay:failures": "node dist/scripts/replay-failures.js",
+    "scan:gitleaks": "node scripts/scan-gitleaks.mjs",
+    "contracts:breaking": "node scripts/check-contracts.mjs"
+  },
+  "dependencies": {
+    "@grpc/grpc-js": "^1.14.3",
+    "@grpc/proto-loader": "^0.8.0",
+    "@nestjs/common": "12.0.3",
+    "@nestjs/core": "12.0.3",
+    "@nestjs/platform-express": "12.0.3",
+    "@nestjs/swagger": "12.0.1",
+    "@opentelemetry/api": "^1.9.0",
+    "@opentelemetry/exporter-trace-otlp-http": "0.222.0",
+    "@opentelemetry/sdk-node": "0.222.0",
+    "@prometheus-io/client": "^0.16.1",
+    "amqplib": "^0.10.9",
+    "express": "^5.1.0",
+    "jsonwebtoken": "^9.0.3",
+    "pg": "^8.16.3",
+    "pino": "^10.0.0",
+    "reflect-metadata": "^0.2.2",
+    "rxjs": "^7.8.2",
+    "typeorm": "^0.3.28",
+    "zod": "^4.1.13"
+  },
+  "devDependencies": {
+    "@bufbuild/buf": "1.73.0",
+    "@types/amqplib": "^0.10.7",
+    "@types/express": "^5.0.6",
+    "@types/jsonwebtoken": "^9.0.10",
+    "@types/node": "^24.10.0",
+    "@types/pg": "^8.15.6",
+    "eslint": "^10.10.0",
+    "prettier": "^3.7.0",
+    "ts-proto": "2.12.4",
+    "typescript": "~5.9.3",
+    "typescript-eslint": "^8.48.0"
+  }
+}
