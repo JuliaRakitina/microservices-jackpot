@@ -1,0 +1,39 @@
+syntax = "proto3";
+package jackpot.v1;
+
+service AuthService {
+  rpc Register(RegisterRequest) returns (RegisterResponse);
+  rpc Login(LoginRequest) returns (LoginResponse);
+  rpc Verify(VerifyRequest) returns (VerifyResponse);
+}
+service UsersService {
+  rpc GetUser(GetUserRequest) returns (GetUserResponse);
+  rpc GetLedger(GetLedgerRequest) returns (GetLedgerResponse);
+  rpc Credit(CreditRequest) returns (CreditResponse);
+}
+service BetsService {
+  rpc Submit(SubmitRequest) returns (SubmitResponse);
+  rpc GetBet(GetBetRequest) returns (GetBetResponse);
+}
+service JackpotService {
+  rpc GetPool(GetPoolRequest) returns (GetPoolResponse);
+}
+message RegisterRequest { string email = 1; string password = 2; }
+message RegisterResponse { string id = 1; string state = 2; }
+message LoginRequest { string email = 1; string password = 2; }
+message LoginResponse { string access_token = 1; int32 expires_in = 2; }
+message VerifyRequest { string token = 1; }
+message VerifyResponse { string id = 1; }
+message GetUserRequest { string id = 1; }
+message GetUserResponse { string id = 1; string email = 2; string role = 3; string balance = 4; }
+message GetLedgerRequest { string id = 1; optional string cursor = 2; }
+message LedgerEntry { string id = 1; string delta = 2; string balance = 3; string reference = 4; string created_at = 5; }
+message GetLedgerResponse { repeated LedgerEntry entries = 1; string next_cursor = 2; }
+message CreditRequest { string id = 1; string amount = 2; string key = 3; }
+message CreditResponse { string id = 1; string email = 2; string role = 3; string balance = 4; }
+message SubmitRequest { string user_id = 1; string amount = 2; string key = 3; }
+message SubmitResponse { string id = 1; string user_id = 2; string amount = 3; string state = 4; string payout = 5; string correlation_id = 6; }
+message GetBetRequest { string id = 1; string user_id = 2; }
+message GetBetResponse { string id = 1; string user_id = 2; string amount = 3; string state = 4; string payout = 5; string correlation_id = 6; }
+message GetPoolRequest {}
+message GetPoolResponse { string balance = 1; string round = 2; }

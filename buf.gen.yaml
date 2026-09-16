@@ -1,0 +1,9 @@
+version: v2
+plugins:
+  - local: protoc-gen-ts_proto
+    out: packages/contracts/src/generated
+    opt:
+      - onlyTypes=true
+      - useExactTypes=false
+      - outputServices=none
+      - importSuffix=.js
