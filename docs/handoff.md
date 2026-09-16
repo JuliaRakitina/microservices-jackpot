@@ -3,20 +3,23 @@
 ## Preservation and branch
 
 - Branch: `codex/2026-hardening`.
+- [Draft PR #1](https://github.com/JuliaRakitina/microservices-jackpot/pull/1); not merged.
 - Base/default-branch SHA: `1789b56222b134c4f2e464feb7076f1d14c040e5`.
 - Original May implementation: `261982a4acae77faf9aa72d28f86d0b6857c9693`, annotated tag `original-2022-submission`.
 - No original commits were rewritten, no license was added, and no merge was performed.
 
 ## Commits
 
-| Commit                     | Change                                                                                                                      |
-| -------------------------- | --------------------------------------------------------------------------------------------------------------------------- |
-| `121a396`                  | Preserve historical diagram, sanitize Postman examples, record exact baseline/tag                                           |
-| `66e99b6`                  | One strict workspace, canonical contracts, secure identity, integer ledger, durable saga, outbox/inbox, locks and telemetry |
-| `b7999c3`                  | Unit/contract/real-dependency/concurrency/E2E/recovery/trace/pagination tests                                               |
-| `797105d`                  | Pinned containers, generated configuration, CI, operator tools, demo and documentation                                      |
-| `c713ada`                  | Narrow a legacy ignore rule so the database initialization script is included in clean clones                               |
-| Final documentation commit | Verification inventory, explicit point/ownership ADRs and this handoff                                                      |
+| Commit    | Change                                                                                                                      |
+| --------- | --------------------------------------------------------------------------------------------------------------------------- |
+| `121a396` | Preserve historical diagram, sanitize Postman examples, record exact baseline/tag                                           |
+| `66e99b6` | One strict workspace, canonical contracts, secure identity, integer ledger, durable saga, outbox/inbox, locks and telemetry |
+| `b7999c3` | Unit/contract/real-dependency/concurrency/E2E/recovery/trace/pagination tests                                               |
+| `797105d` | Pinned containers, generated configuration, CI, operator tools, demo and documentation                                      |
+| `c713ada` | Narrow a legacy ignore rule so the database initialization script is included in clean clones                               |
+| `426e881` | Verification inventory, explicit point/ownership ADRs and this handoff                                                      |
+
+The subsequent CI portability fix waits for authenticated AMQP consumer readiness before the resilience test opens an inspection connection. This fixes a Linux startup race without fixed sleeps or changed domain semantics.
 
 ## Baseline and implementation
 

@@ -38,6 +38,18 @@ test(
       fixture.buses.bets.start(),
       fixture.buses.jackpot.start(),
     ]);
+    // start() schedules recovery after a transient handshake failure. Container
+    // process health alone does not mean AMQP authentication/topology are ready.
+    await eventually(async () =>
+      (
+        await Promise.all([
+          usersBus.ready(),
+          fixture.buses.auth.ready(),
+          fixture.buses.bets.ready(),
+          fixture.buses.jackpot.ready(),
+        ])
+      ).every(Boolean),
+    );
     const health = await healthServer(
       0,
       async () => (await fixture.dbs.users.ready()) && (await usersBus.ready()),

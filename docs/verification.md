@@ -58,8 +58,10 @@ Total: **68 passing test nodes, representing 64 leaf scenarios**; four parent gr
 
 ### Failures found and repaired during verification
 
-Docker may change automatically assigned host ports on container restart; the test fixture now reserves random explicit ports. Independent review found retry publication failures could exhaust consumer prefetch and shutdown could create late connections; both have regression tests. Test cleanup initially closed its broker before a separately owned inspection connection; resource cleanup now runs in reverse order and the full resilience suite exits cleanly. Unbounded ledger responses could exceed the gRPC limit, so sequence-cursor pagination is implemented and tested.
+Docker may change automatically assigned host ports on container restart; the test fixture now reserves random explicit ports. Independent review found retry publication failures could exhaust consumer prefetch and shutdown could create late connections; both have regression tests. The first Linux CI run also exposed a setup race: container ping succeeded before AMQP authentication was ready. The resilience setup now waits for all actual consumers to report readiness before opening its inspection connection. Test cleanup initially closed its broker before a separately owned inspection connection; resource cleanup now runs in reverse order and the full resilience suite exits cleanly. Unbounded ledger responses could exceed the gRPC limit, so sequence-cursor pagination is implemented and tested.
 
 ### Boundaries of this evidence
 
 The security scans cover the current tree. Historical literals remain in preserved commits and must not be reused. npm emits a deprecation notice for TypeORM's transitive glob 10 dependency, but the advisory audit reports zero vulnerabilities; nothing is hidden by an audit suppression. No penetration test, fairness certification, HA/failover test, backup restoration drill, load benchmark or original-data import has been performed. Local consumer/broker recovery is not proof against loss of every durable storage copy.
+
+The optional Jaeger 2.21 tracing profile was also started locally. Its UI returned HTTP 200 and its stable `/api/v3/services` endpoint listed all five jackpot services after the demo exported traces.
