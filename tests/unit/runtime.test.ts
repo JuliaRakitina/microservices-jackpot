@@ -8,9 +8,12 @@ import amqp, {
   type ConsumeMessage,
   type Options,
 } from 'amqplib';
-import { EventBus } from '../../packages/runtime/src/bus.js';
+import { EventBus, subscriptions } from '../../packages/runtime/src/bus.js';
 import type { Database } from '../../packages/runtime/src/database.js';
-import type { DomainEvent } from '../../packages/contracts/src/events.js';
+import {
+  eventTypes,
+  type DomainEvent,
+} from '../../packages/contracts/src/events.js';
 
 function deferred<T>() {
   let resolve!: (value: T) => void;
@@ -24,6 +27,7 @@ function event(): DomainEvent {
   return {
     id: randomUUID(),
     type: 'profile.created',
+    schemaVersion: 1,
     correlationId: randomUUID(),
     occurredAt: new Date().toISOString(),
     payload: { id: randomUUID() },
@@ -42,6 +46,13 @@ function broker(
   } = {},
 ) {
   let deliver: ((message: ConsumeMessage | null) => void) | undefined;
+  const bindings: { queue: string; exchange: string; type: string }[] = [];
+  const publications: {
+    exchange: string;
+    routingKey: string;
+    body: Buffer;
+    properties: Options.Publish;
+  }[] = [];
   let consumers = 0,
     acknowledgments = 0,
     closes = 0,
@@ -49,7 +60,9 @@ function broker(
   const channel = Object.assign(new EventEmitter(), {
     assertExchange: async () => {},
     assertQueue: async () => {},
-    bindQueue: async () => {},
+    bindQueue: async (queue: string, exchange: string, type: string) => {
+      bindings.push({ queue, exchange, type });
+    },
     prefetch: async () => {},
     consume: async (_queue: string, callback: typeof deliver) => {
       consumers++;
@@ -63,12 +76,13 @@ function broker(
       acknowledgments++;
     },
     publish: (
-      _exchange: string,
-      _routingKey: string,
-      _body: Buffer,
+      exchange: string,
+      routingKey: string,
+      body: Buffer,
       properties: Options.Publish,
       done: (error: Error | null) => void,
     ) => {
+      publications.push({ exchange, routingKey, body, properties });
       if (options.publish) options.publish(channel, properties, done);
       else done(null);
       return true;
@@ -94,6 +108,8 @@ function broker(
   });
   return {
     connection: connection as unknown as ChannelModel,
+    bindings,
+    publications,
     get consumers() {
       return consumers;
     },
@@ -106,17 +122,17 @@ function broker(
     get destroyed() {
       return destroyed;
     },
-    deliver(value: DomainEvent) {
+    deliver(value: unknown, headers: Record<string, unknown> = {}) {
       assert.ok(deliver);
       deliver({
         content: Buffer.from(JSON.stringify(value)),
-        properties: { headers: {} },
+        properties: { headers },
       } as ConsumeMessage);
     },
   };
 }
 
-function database(consume: () => Promise<void> = async () => {}) {
+function database(consume: Database['consume'] = async () => {}) {
   return {
     consume,
     query: async () => [{ count: '0' }],
@@ -124,6 +140,155 @@ function database(consume: () => Promise<void> = async () => {}) {
       handler({ query: async () => [] }),
   } as unknown as Database;
 }
+
+test('consumer validates payload, event type and schema version before database access', async (t) => {
+  const fake = broker();
+  let consumed = 0;
+  let handled = 0;
+  t.mock.method(amqp, 'connect', async () => fake.connection);
+  const bus = new EventBus(
+    'auth',
+    'amqp://test',
+    database(async () => {
+      consumed++;
+    }),
+    async () => {
+      handled++;
+    },
+  );
+  t.after(() => bus.stop());
+  await bus.start();
+  const valid = event();
+  const { schemaVersion: _version, ...missingVersion } = valid;
+  const invalid: Record<string, unknown> = {
+    'missing payload field': { ...valid, payload: {} },
+    'invalid payload field': { ...valid, payload: { id: 'not-a-uuid' } },
+    'payload for another event': {
+      ...valid,
+      payload: { id: randomUUID(), email: 'player@example.com' },
+    },
+    'missing schema version': missingVersion,
+    'unsupported schema version': { ...valid, schemaVersion: 2 },
+    'string schema version': { ...valid, schemaVersion: '1' },
+    'unknown event type': { ...valid, type: 'profile.unknown' },
+  };
+  let deliveries = 0;
+  for (const [description, value] of Object.entries(invalid)) {
+    for (const attempt of [0, 5]) {
+      fake.deliver(value, { attempt });
+      await nextTurn();
+      deliveries++;
+      assert.equal(consumed, 0, description);
+      assert.equal(handled, 0, description);
+      assert.equal(fake.acknowledgments, deliveries, description);
+      assert.equal(fake.publications.length, deliveries, description);
+      const published = fake.publications.at(-1);
+      assert.ok(published, description);
+      assert.equal(published.exchange, '', description);
+      assert.equal(
+        published.routingKey,
+        attempt === 0 ? 'jackpot.auth.retry.0' : 'jackpot.auth.failed',
+        description,
+      );
+      assert.equal(
+        published.body.toString(),
+        JSON.stringify(value),
+        description,
+      );
+      assert.equal(published.properties.persistent, true, description);
+      assert.equal(published.properties.mandatory, true, description);
+      assert.deepEqual(
+        published.properties.headers,
+        { attempt: attempt + 1, failure: 'INVALID_ARGUMENT' },
+        description,
+      );
+    }
+  }
+});
+
+test('invalid delivery is acknowledged only after its retry is confirmed', async (t) => {
+  let confirm: ((error: Error | null) => void) | undefined;
+  const fake = broker({
+    publish: (_channel, _properties, done) => {
+      confirm = done;
+    },
+  });
+  t.mock.method(amqp, 'connect', async () => fake.connection);
+  const bus = new EventBus('auth', 'amqp://test', database(), async () => {});
+  t.after(() => bus.stop());
+  await bus.start();
+  fake.deliver({ ...event(), schemaVersion: 2 });
+  await nextTurn();
+  assert.equal(fake.publications.length, 1);
+  assert.equal(fake.acknowledgments, 0);
+  assert.ok(confirm);
+  confirm(null);
+  await nextTurn();
+  assert.equal(fake.acknowledgments, 1);
+});
+
+test('consumer admits the subscribed v1 event and rejects a valid event for another service', async (t) => {
+  const fake = broker();
+  const consumed: DomainEvent[] = [];
+  const handle = async () => {};
+  t.mock.method(amqp, 'connect', async () => fake.connection);
+  const bus = new EventBus(
+    'auth',
+    'amqp://test',
+    database(async (received, handler) => {
+      consumed.push(received);
+      assert.equal(handler, handle);
+    }),
+    handle,
+  );
+  t.after(() => bus.stop());
+  await bus.start();
+  const valid = event();
+  fake.deliver(valid);
+  await nextTurn();
+  assert.deepEqual(consumed, [valid]);
+  assert.equal(fake.acknowledgments, 1);
+  assert.equal(fake.publications.length, 0);
+
+  fake.deliver({
+    ...valid,
+    id: randomUUID(),
+    type: 'identity.registered',
+    payload: { id: randomUUID(), email: 'player@example.com' },
+  });
+  await nextTurn();
+  assert.deepEqual(consumed, [valid]);
+  assert.equal(fake.acknowledgments, 2);
+  assert.equal(fake.publications.length, 1);
+  assert.equal(fake.publications[0]?.routingKey, 'jackpot.auth.retry.0');
+  assert.equal(
+    fake.publications[0]?.properties.headers?.failure,
+    'INVALID_ARGUMENT',
+  );
+});
+
+test('the subscription map covers every event and declares each durable route', async (t) => {
+  const fake = broker();
+  t.mock.method(amqp, 'connect', async () => fake.connection);
+  const bus = new EventBus('auth', 'amqp://test', database(), async () => {});
+  t.after(() => bus.stop());
+  await bus.start();
+  assert.equal(eventTypes.length, 8);
+  assert.deepEqual(
+    Object.values(subscriptions).flat().sort(),
+    [...eventTypes].sort(),
+  );
+  assert.deepEqual(
+    fake.bindings,
+    Object.entries(subscriptions).flatMap(([service, types]) =>
+      types.map((type) => ({
+        queue: `jackpot.${service}`,
+        exchange: 'jackpot.events',
+        type,
+      })),
+    ),
+  );
+});
 
 test(
   'shutdown waits for an in-progress connection and never installs a late consumer',

@@ -14,7 +14,8 @@ import {
 import { logger, withSpan } from '../../observability/src/index.js';
 import type { Database, Transaction } from './database.js';
 
-export const subscriptions: Record<string, EventType[]> = {
+// The sole routing map: used both to declare durable queues and admit deliveries.
+export const subscriptions: Readonly<Record<string, readonly EventType[]>> = {
   auth: ['profile.created'],
   users: ['identity.registered', 'bet.requested', 'bet.settled'],
   bets: ['funds.reserved', 'funds.rejected', 'payout.applied'],

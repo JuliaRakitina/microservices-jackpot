@@ -2,9 +2,9 @@ import { randomUUID } from 'node:crypto';
 import { z } from 'zod';
 import { Gauge, Registry } from '@prometheus-io/client';
 import { DomainError, parse } from '../../../packages/contracts/src/errors.js';
-import type {
-  DomainEvent,
-  EventType,
+import {
+  eventPayloadSchemas,
+  type DomainEvent,
 } from '../../../packages/contracts/src/events.js';
 import { points } from '../../../packages/contracts/src/points.js';
 import { logger } from '../../../packages/observability/src/index.js';
@@ -13,11 +13,6 @@ import type {
   Transaction,
 } from '../../../packages/runtime/src/database.js';
 
-export const subscriptions: EventType[] = [
-  'funds.reserved',
-  'funds.rejected',
-  'payout.applied',
-];
 export type BetState =
   'funds_pending' | 'accepted' | 'won' | 'lost' | 'rejected';
 const id = z.string().uuid();
@@ -25,15 +20,6 @@ const submitSchema = z
   .object({ userId: id, amount: z.string(), key: z.string().min(8).max(128) })
   .strict();
 const querySchema = z.object({ id, userId: id }).strict();
-const reservedSchema = z
-  .object({ betId: id, userId: id, amount: z.string() })
-  .strict();
-const rejectedSchema = z
-  .object({ betId: id, userId: id, reason: z.string().min(1).max(128) })
-  .strict();
-const payoutSchema = z
-  .object({ betId: id, userId: id, won: z.boolean(), payout: z.string() })
-  .strict();
 
 interface BetRow extends Record<string, unknown> {
   id: string;
@@ -163,7 +149,7 @@ export class BetsService {
 
   async handle(event: DomainEvent, tx: Transaction): Promise<void> {
     if (event.type === 'funds.reserved') {
-      const input = parse(reservedSchema, event.payload);
+      const input = parse(eventPayloadSchemas['funds.reserved'], event.payload);
       const value = points(input.amount);
       const row = await this.lockBet(tx, input.betId, input.userId);
       if (row.amount !== value.toString())
@@ -192,7 +178,7 @@ export class BetsService {
       return;
     }
     if (event.type === 'funds.rejected') {
-      const input = parse(rejectedSchema, event.payload);
+      const input = parse(eventPayloadSchemas['funds.rejected'], event.payload);
       const row = await this.lockBet(tx, input.betId, input.userId);
       if (row.state === 'rejected') {
         if (row.rejection_reason !== input.reason)
@@ -211,7 +197,7 @@ export class BetsService {
       return;
     }
     if (event.type === 'payout.applied') {
-      const input = parse(payoutSchema, event.payload);
+      const input = parse(eventPayloadSchemas['payout.applied'], event.payload);
       const payout = points(input.payout, true);
       if (!input.won && payout !== 0n)
         throw new DomainError(

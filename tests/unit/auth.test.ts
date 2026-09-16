@@ -203,6 +203,7 @@ test('profile event activates an existing identity, validates payloads and rejec
   const event: DomainEvent = {
     id: randomUUID(),
     type: 'profile.created',
+    schemaVersion: 1,
     correlationId: randomUUID(),
     occurredAt: new Date().toISOString(),
     payload: { id: userId },
@@ -212,6 +213,7 @@ test('profile event activates an existing identity, validates payloads and rejec
   assert.deepEqual(fake.writes[0]?.parameters, [userId]);
   await assert.rejects(
     service.handle(
+      // @ts-expect-error Deliberately bypass the typed contract to test runtime rejection.
       { ...event, payload: { id: userId, role: 'admin' } },
       fake.tx,
     ),

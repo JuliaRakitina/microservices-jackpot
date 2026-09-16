@@ -2,7 +2,11 @@ import assert from 'node:assert/strict';
 import { randomUUID } from 'node:crypto';
 import { test } from 'node:test';
 import { DomainError } from '../../packages/contracts/src/errors.js';
-import type { DomainEvent } from '../../packages/contracts/src/events.js';
+import {
+  eventSchema,
+  type DomainEventOf,
+  type EventType,
+} from '../../packages/contracts/src/events.js';
 import {
   createFixture,
   docker,
@@ -41,18 +45,20 @@ async function finalBet(fixture: Fixture, id: string, userId: string) {
   return fixture.services.bets.getBet({ id, userId });
 }
 
-async function storedEvent(
+async function storedEvent<T extends EventType>(
   fixture: Fixture,
   service: 'users' | 'bets' | 'jackpot',
-  type: string,
+  type: T,
   betId: string,
 ) {
-  const [row] = await fixture.dbs[service].query<{ event: DomainEvent }>(
+  const [row] = await fixture.dbs[service].query<{ event: unknown }>(
     "SELECT event FROM outbox WHERE event->>'type' = $1 AND event->'payload'->>'betId' = $2",
     [type, betId],
   );
   assert.ok(row, `Expected persisted ${type} event`);
-  return row.event;
+  const result = eventSchema.parse(row.event);
+  assert.equal(result.type, type);
+  return result as DomainEventOf<T>;
 }
 
 test(

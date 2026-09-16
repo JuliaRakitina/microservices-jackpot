@@ -1,9 +1,9 @@
 import { randomInt } from 'node:crypto';
 import { z } from 'zod';
 import { DomainError, parse } from '../../../packages/contracts/src/errors.js';
-import type {
-  DomainEvent,
-  EventType,
+import {
+  eventPayloadSchemas,
+  type DomainEvent,
 } from '../../../packages/contracts/src/events.js';
 import {
   contribution,
@@ -15,7 +15,6 @@ import type {
   Transaction,
 } from '../../../packages/runtime/src/database.js';
 
-export const subscriptions: EventType[] = ['bet.accepted'];
 export interface SelectionContext {
   betId: string;
   round: string;
@@ -31,13 +30,6 @@ export const systemSelector: WinnerSelector = () => {
   const draw = randomInt(100);
   return { won: draw === 0, draw };
 };
-const acceptedSchema = z
-  .object({
-    betId: z.string().uuid(),
-    userId: z.string().uuid(),
-    amount: z.string(),
-  })
-  .strict();
 const poolSchema = z.object({}).strict();
 interface PoolRow extends Record<string, unknown> {
   balance: string;
@@ -105,7 +97,7 @@ export class JackpotService {
   async handle(event: DomainEvent, tx: Transaction): Promise<void> {
     if (event.type !== 'bet.accepted')
       throw new DomainError('INVALID_ARGUMENT', 'Unsupported Jackpot event');
-    const input = parse(acceptedSchema, event.payload);
+    const input = parse(eventPayloadSchemas['bet.accepted'], event.payload);
     const stake = points(input.amount);
     // One row serializes pool contributions, round rollover and winner decisions.
     // Settlement lookup happens after acquiring it so concurrent duplicate deliveries

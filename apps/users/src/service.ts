@@ -1,9 +1,9 @@
 import { randomUUID } from 'node:crypto';
 import { z } from 'zod';
 import { DomainError, parse } from '../../../packages/contracts/src/errors.js';
-import type {
-  DomainEvent,
-  EventType,
+import {
+  eventPayloadSchemas,
+  type DomainEvent,
 } from '../../../packages/contracts/src/events.js';
 import { MAX_POINTS, points } from '../../../packages/contracts/src/points.js';
 import type {
@@ -11,22 +11,8 @@ import type {
   Transaction,
 } from '../../../packages/runtime/src/database.js';
 
-export const subscriptions: EventType[] = [
-  'identity.registered',
-  'bet.requested',
-  'bet.settled',
-];
 const id = z.string().uuid();
 const amount = z.string();
-const identitySchema = z
-  .object({ id, email: z.string().email().max(254) })
-  .strict();
-const requestedSchema = z
-  .object({ betId: id, userId: id, amount, key: z.string().min(8).max(128) })
-  .strict();
-const settledSchema = z
-  .object({ betId: id, userId: id, won: z.boolean(), payout: amount })
-  .strict();
 const creditSchema = z
   .object({ id, amount, key: z.string().min(8).max(128) })
   .strict();
@@ -154,7 +140,10 @@ export class UsersService {
   async handle(event: DomainEvent, tx: Transaction): Promise<void> {
     switch (event.type) {
       case 'identity.registered': {
-        const input = parse(identitySchema, event.payload);
+        const input = parse(
+          eventPayloadSchemas['identity.registered'],
+          event.payload,
+        );
         const created = await tx.query(
           'INSERT INTO profiles(id, email) VALUES ($1, $2) ON CONFLICT (id) DO NOTHING RETURNING id',
           [input.id, input.email],
@@ -188,7 +177,7 @@ export class UsersService {
   }
 
   private async reserve(event: DomainEvent, tx: Transaction) {
-    const input = parse(requestedSchema, event.payload);
+    const input = parse(eventPayloadSchemas['bet.requested'], event.payload);
     const value = points(input.amount);
     // The business identifier is locked before the account, preventing a second debit
     // even when the same logical command is republished with a different event ID.
@@ -247,7 +236,7 @@ export class UsersService {
   }
 
   private async settle(event: DomainEvent, tx: Transaction) {
-    const input = parse(settledSchema, event.payload);
+    const input = parse(eventPayloadSchemas['bet.settled'], event.payload);
     const value = validateSettlement(input.won, input.payout);
     const [reservation] = await tx.query<ReservationRow>(
       'SELECT * FROM reservations WHERE bet_id = $1 FOR UPDATE',

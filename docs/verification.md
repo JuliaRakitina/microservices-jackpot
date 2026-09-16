@@ -20,7 +20,7 @@ Original Compose validation failed because environment values were absent and po
 
 ## Modernized implementation: executed results
 
-Local tools: Node 24.13.0, npm 11.6.2, Docker Desktop Engine 29.5.3, Compose 5.1.4. Application images use pinned Node 24.21.0, PostgreSQL 17.11 and RabbitMQ 4.3.5. Tests use real disposable containers, never a mocked database/broker.
+Local tools: Node 24.13.0, npm 11.6.2, Docker Desktop Engine 29.5.3, Compose 5.1.4. Application images use pinned Node 24.21.0, PostgreSQL 17.11 and RabbitMQ 4.3.5. Integration, E2E and resilience tests use real disposable containers. Unit and producer/consumer boundary tests use isolated fakes to observe validation before database writes or delivery acknowledgements.
 
 | Command                                                                                    | Result                                                                                                                                                     |
 | ------------------------------------------------------------------------------------------ | ---------------------------------------------------------------------------------------------------------------------------------------------------------- |
@@ -28,8 +28,8 @@ Local tools: Node 24.13.0, npm 11.6.2, Docker Desktop Engine 29.5.3, Compose 5.1
 | `npm run format:check`                                                                     | Pass                                                                                                                                                       |
 | `npm run lint`                                                                             | Pass                                                                                                                                                       |
 | `npm run typecheck` / `npm run build`                                                      | Pass, strict TypeScript                                                                                                                                    |
-| `npm test`                                                                                 | 37 passing test nodes (36 leaf scenarios)                                                                                                                  |
-| `npm run test:contracts`                                                                   | 3 passing scenarios                                                                                                                                        |
+| `npm test`                                                                                 | 41 passing test nodes (40 leaf scenarios)                                                                                                                  |
+| `npm run test:contracts`                                                                   | 11 passing scenarios                                                                                                                                       |
 | `npm run test:integration`                                                                 | 13 passing nodes (12 leaf scenarios)                                                                                                                       |
 | `npm run test:e2e`                                                                         | 10 passing nodes (9 leaf scenarios)                                                                                                                        |
 | `npm run test:resilience`                                                                  | 5 passing nodes (4 leaf scenarios)                                                                                                                         |
@@ -46,15 +46,18 @@ Local tools: Node 24.13.0, npm 11.6.2, Docker Desktop Engine 29.5.3, Compose 5.1
 | `docker compose exec -T gateway id -u`                                                     | `1000`, application runs as non-root                                                                                                                       |
 | Auth-role connection to Users database                                                     | PostgreSQL rejects with 42501; database ownership isolation verified                                                                                       |
 
-Total: **68 passing test nodes, representing 64 leaf scenarios**; four parent grouping nodes are included in Node's reported count. No skips. Generated-code diff verification and remote CI status are recorded in the handoff after commits.
+Total: **80 passing test nodes, representing 76 leaf scenarios**; four parent grouping nodes are included in Node's reported count. No skips. Generated-code diff verification and remote CI status are recorded in the handoff after commits.
 
 ### What each layer proves
 
 - **Unit:** scrypt salting/verification; registration role rejection; pending/active credentials; token expiry/audience/signature; live role revocation; decimal canonicalization/overflow/rounding; winner/loser decisions; invalid transitions; configuration validation; HTTP mapping, payload limits, rate limits and cursor validation. Six runtime regressions exercise late connection shutdown, stalled topology/close handshakes, exhausted retry publication capacity, confirmation timeout and unroutable messages.
-- **Contracts:** exact strings beyond 2^53 survive protobuf serialization; event envelopes reject incompatible fields; actual Buf invocation accepts unchanged v1 and rejects changed point field types.
+- **Contracts:** all eight discriminated event schemas require `schemaVersion: 1` and strict typed payloads. Tests reject malformed/mismatched payloads, missing/unsupported versions, unknown fields and invalid point values; producer rejection occurs before any outbox write. Compile-time tests reject mismatched event/payload pairs, including uncorrelated union types. Exact strings beyond 2^53 survive protobuf serialization; actual Buf invocation accepts unchanged v1 and rejects changed point field types.
+- **Consumer boundary:** invalid event versions and payloads never reach the database; confirmed durable retry/parking precedes acknowledgment. The authoritative subscription map covers all eight events and drives queue bindings and consumer admission.
 - **Integration:** empty/rerun migrations; registration recovery; simultaneous idempotency keys; 20 competing stakes cannot overspend; 20 accepted stakes retain all contributions; same-ID and semantic/new-ID redelivery; exactly one winning payout; transaction rollback; out-of-order failure; broker stop/start recovery; durable outcome/latency metrics. Pagination separately tests 106 ledger rows, exact large cursors, interleaved foreign-user entries, bounded 100-entry replies and appends between pages.
 - **E2E:** actual HTTP→gRPC→PostgreSQL/RabbitMQ registration/role/credit/bet/ledger flow, cross-user isolation, command retry, insufficient funds and internal RPC authentication. A local OTLP receiver verifies shared trace IDs, parent-child relationships through events, persisted traceparent and absence of credentials/email in trace export.
 - **Resilience:** six failed delivery attempts park one event without debit; the operator replay command after repair settles exactly once; restarting a consumer resumes accepted work; database outage makes readiness 503 and liveness 200.
+
+The event-contract follow-up reran every `verify` workflow command, including `npm ci`, all five test suites, both secret scans and dependency audit. A fresh isolated Compose project `jackpot-contract-check` also completed setup, configuration validation, image build, healthy startup and demo, then cleaned up its own disposable volumes. The demo returned `idempotencyVerified: true`, one 100-point debit, balance 900 and payout 0.
 
 ### Failures found and repaired during verification
 

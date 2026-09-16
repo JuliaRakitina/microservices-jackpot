@@ -6,20 +6,22 @@
 - [Draft PR #1](https://github.com/JuliaRakitina/microservices-jackpot/pull/1); not merged.
 - Base/default-branch SHA: `1789b56222b134c4f2e464feb7076f1d14c040e5`.
 - Original May implementation: `261982a4acae77faf9aa72d28f86d0b6857c9693`, annotated tag `original-2022-submission`.
-- No original commits were rewritten, no license was added, and no merge was performed.
+- All 17 original commits, including the base, remain byte-for-byte unchanged. No license was added, and no merge was performed.
+- Modernization commits use `Julia Rakitina <julia.rakitina@gmail.com>` as both author and committer; the annotated tag uses the same personal tagger identity. The authorship correction preserved commit trees, messages, dates and order, as well as the tag target and annotation.
 
-## Commits
+## Modernization commits before the event-contract follow-up
 
 | Commit    | Change                                                                                                                      |
 | --------- | --------------------------------------------------------------------------------------------------------------------------- |
-| `121a396` | Preserve historical diagram, sanitize Postman examples, record exact baseline/tag                                           |
-| `66e99b6` | One strict workspace, canonical contracts, secure identity, integer ledger, durable saga, outbox/inbox, locks and telemetry |
-| `b7999c3` | Unit/contract/real-dependency/concurrency/E2E/recovery/trace/pagination tests                                               |
-| `797105d` | Pinned containers, generated configuration, CI, operator tools, demo and documentation                                      |
-| `c713ada` | Narrow a legacy ignore rule so the database initialization script is included in clean clones                               |
-| `426e881` | Verification inventory, explicit point/ownership ADRs and this handoff                                                      |
+| `77f3f60` | Preserve historical diagram, sanitize Postman examples, record exact baseline/tag                                           |
+| `e935b8f` | One strict workspace, canonical contracts, secure identity, integer ledger, durable saga, outbox/inbox, locks and telemetry |
+| `6b1445e` | Unit/contract/real-dependency/concurrency/E2E/recovery/trace/pagination tests                                               |
+| `91cb119` | Pinned containers, generated configuration, CI, operator tools, demo and documentation                                      |
+| `4201c29` | Narrow a legacy ignore rule so the database initialization script is included in clean clones                               |
+| `19924ab` | Verification inventory, explicit point/ownership ADRs and this handoff                                                      |
+| `462a9bf` | Wait for authenticated AMQP consumer readiness before opening the resilience inspection connection                          |
 
-The subsequent CI portability fix waits for authenticated AMQP consumer readiness before the resilience test opens an inspection connection. This fixes a Linux startup race without fixed sleeps or changed domain semantics.
+These SHAs reflect the personal-authorship rewrite. The final row fixes a Linux startup race without fixed sleeps or changed domain semantics.
 
 ## Baseline and implementation
 
@@ -27,9 +29,15 @@ The subsequent CI portability fix waits for authenticated AMQP consumer readines
 
 The final architecture keeps Gateway/Auth/Users/Bets/Jackpot with separate owned databases. Gateway makes gRPC calls; domain progress flows through RabbitMQ. Synchronous Auth↔Users and Bets↔Jackpot cycles are gone. Registration and settlement have durable pending states. Row locks, exact bigint arithmetic, unique command/business keys and inbox/outbox transactions protect value mutations.
 
+## Event-contract follow-up
+
+All eight broker events now share a discriminated contract in `packages/contracts/src/events.ts`, with strict typed payloads and required `schemaVersion: 1`. Generic `Transaction.emit` rejects mismatched event/payload pairs at compile time and validates the complete envelope before outbox insertion. Consumers validate the same schema before inbox or domain writes; handlers reuse the canonical payload schemas. The runtime subscription map is the only source for durable bindings and consumer admission.
+
+Contract tests cover every schema, malformed payloads, unknown fields, missing/unsupported versions, exact point bounds and producer-side rejection before writes. Typecheck tests preserve discriminator/payload correlation; consumer boundary tests verify rejection, durable retry/parking and confirmation-before-acknowledgment. Unversioned pending messages require draining with the old services or a deliberate disposable-data reset; see [architecture](architecture.md).
+
 ## Executed verification
 
-Local clean install, formatting, lint, strict build/typecheck, protobuf lint/regeneration, dependency/secret scans, Compose health and demo passed. Tests: **37 unit, 3 contract, 13 integration, 10 E2E, 5 resilience nodes**, totaling **68 nodes / 64 leaf scenarios**, with no skips. Tests include real concurrent overspend/pool mutation, duplicate IDs and logical redelivery, exactly one winning payout, rollback, broker/consumer restart, failure-queue replay, dependency readiness and OTLP trace propagation. See verification.md for commands and scope.
+Local clean install, formatting, lint, strict build/typecheck, protobuf lint/regeneration, dependency/secret scans, Compose health and demo passed. Tests: **41 unit, 11 contract, 13 integration, 10 E2E, 5 resilience nodes**, totaling **80 nodes / 76 leaf scenarios**, with no skips. Tests include real concurrent overspend/pool mutation, duplicate IDs and logical redelivery, exactly one winning payout, rollback, broker/consumer restart, failure-queue replay, dependency readiness and OTLP trace propagation. See verification.md for commands and scope.
 
 `npm audit` reported zero vulnerabilities. Pinned Gitleaks 8.30.1 reported zero current-tree findings with default rules; a separate location-only heuristic scan also passed. Original history still contains obsolete literals; never reuse them. A transitive glob deprecation warning remains without a reported advisory.
 
@@ -50,7 +58,7 @@ docker compose up --build -d --wait --wait-timeout 180
 npm run demo
 ```
 
-If port 3000 is occupied, set `GATEWAY_PORT=3300` in `.env`. This verification used 3300. Expected demo: one logical 100-point bet despite retry; ledger credit 1000/debit 100; final balance 900 plus any payout; printed bet/correlation IDs. The recorded local losing run finished with 900 and payout 0. The app runs as UID 1000; Auth credentials cannot connect to the Users database (PostgreSQL 42501).
+If port 3000 is occupied, set `GATEWAY_PORT=3300` in `.env`. The initial verification used 3300. The event-contract follow-up also passed a fresh isolated `jackpot-contract-check` Compose stack on an allocated host port, then removed only that disposable stack and its volumes. Expected demo: one logical 100-point bet despite retry; ledger credit 1000/debit 100; final balance 900 plus any payout; printed bet/correlation IDs. The recorded local losing run finished with 900 and payout 0. The app runs as UID 1000; Auth credentials cannot connect to the Users database (PostgreSQL 42501).
 
 Keep `.env` with its volumes. `docker compose down` stops services; adding `--volumes` explicitly deletes this project's stored data. No global Docker cleanup is used.
 

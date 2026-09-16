@@ -16,10 +16,11 @@ import {
 import { migration as jackpotMigration } from '../../../apps/jackpot/src/migration.js';
 import { Database } from '../../runtime/src/database.js';
 import { EventBus } from '../../runtime/src/bus.js';
-import type {
-  DomainEvent,
-  EventPayload,
-  EventType,
+import {
+  eventSchema,
+  type DomainEventOf,
+  type EventPayload,
+  type EventType,
 } from '../../contracts/src/events.js';
 
 type Name = 'auth' | 'users' | 'bets' | 'jackpot';
@@ -89,14 +90,18 @@ export async function eventually(
   );
 }
 
-export function event(type: EventType, payload: EventPayload): DomainEvent {
-  return {
+export function event<T extends EventType>(
+  type: T,
+  payload: EventPayload<NoInfer<T>>,
+): DomainEventOf<T> {
+  return eventSchema.parse({
     id: randomUUID(),
+    schemaVersion: 1,
     type,
     payload,
     correlationId: randomUUID(),
     occurredAt: new Date().toISOString(),
-  };
+  }) as DomainEventOf<T>;
 }
 
 export interface Fixture {

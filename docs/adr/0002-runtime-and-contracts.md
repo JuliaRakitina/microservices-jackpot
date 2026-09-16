@@ -15,6 +15,8 @@ The choice follows the [official Node release schedule](https://nodejs.org/en/ab
 
 Keep protobuf contracts in `packages/contracts/proto/jackpot/v1`; generate TypeScript with pinned Buf and ts-proto tools. CI lints contracts, regenerates outputs and rejects a generated-file diff. Share contracts and technical runtime only; domain schemas remain service-owned.
 
+Keep broker contracts in `packages/contracts/src/events.ts`: a discriminated union binds each event type to a strict payload and requires `schemaVersion: 1`. Infer TypeScript event and payload types from those schemas. Validate complete events before outbox insertion and at the consumer boundary; reject missing or unsupported versions. One runtime subscription map defines both durable bindings and allowed deliveries.
+
 ## Consequences
 
 Installation and upgrades are reproducible and coordinated. One workspace makes cross-service changes easier, but shared technical changes require all-service verification. Contract field numbers and the `v1` namespace are compatibility boundaries; a new breaking contract requires an explicit version transition.

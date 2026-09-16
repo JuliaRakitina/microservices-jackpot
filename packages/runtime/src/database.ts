@@ -1,13 +1,14 @@
 import 'reflect-metadata';
 import { randomUUID } from 'node:crypto';
 import { DataSource, type EntityManager } from 'typeorm';
-import type {
-  DomainEvent,
-  EventType,
-  EventPayload,
+import {
+  eventSchema,
+  type DomainEvent,
+  type EventType,
+  type EventPayload,
 } from '../../contracts/src/events.js';
 import { traceHeader } from '../../observability/src/index.js';
-import { DomainError } from '../../contracts/src/errors.js';
+import { DomainError, parse } from '../../contracts/src/errors.js';
 
 const infrastructure = `
 CREATE TABLE IF NOT EXISTS schema_migrations (version integer PRIMARY KEY, applied_at timestamptz NOT NULL DEFAULT now());
@@ -23,19 +24,20 @@ export class Transaction {
   ): Promise<T[]> {
     return this.manager.query(sql, parameters) as Promise<T[]>;
   }
-  async emit(
-    type: EventType,
-    payload: EventPayload,
-    correlationId: string,
+  async emit<T extends EventType>(
+    ...[type, payload, correlationId]: {
+      [K in T]: [type: K, payload: EventPayload<K>, correlationId: string];
+    }[T]
   ): Promise<void> {
-    const event: DomainEvent = {
+    const event = parse(eventSchema, {
       id: randomUUID(),
+      schemaVersion: 1,
       type,
       payload,
       correlationId,
       occurredAt: new Date().toISOString(),
       traceparent: traceHeader(),
-    };
+    });
     await this.query('INSERT INTO outbox(id,event) VALUES ($1,$2)', [
       event.id,
       JSON.stringify(event),

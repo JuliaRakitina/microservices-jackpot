@@ -2,9 +2,9 @@ import { randomBytes, randomUUID, scrypt, timingSafeEqual } from 'node:crypto';
 import jwt from 'jsonwebtoken';
 import { z } from 'zod';
 import { DomainError, parse } from '../../../packages/contracts/src/errors.js';
-import type {
-  DomainEvent,
-  EventType,
+import {
+  eventPayloadSchemas,
+  type DomainEvent,
 } from '../../../packages/contracts/src/events.js';
 import type {
   Database,
@@ -22,7 +22,6 @@ export const registrationSchema = z
 export const loginSchema = z
   .object({ email, password: z.string().min(1).max(128) })
   .strict();
-const profileCreatedSchema = z.object({ id: z.string().uuid() }).strict();
 const verificationSchema = z
   .object({ token: z.string().min(1).max(8192) })
   .strict();
@@ -69,8 +68,6 @@ type IdentityRow = Record<string, unknown> & {
   state: 'pending' | 'active';
   password_hash: string;
 };
-
-export const subscriptions: EventType[] = ['profile.created'];
 
 export class AuthService {
   constructor(
@@ -165,7 +162,10 @@ export class AuthService {
 
   async handle(event: DomainEvent, tx: Transaction): Promise<void> {
     if (event.type !== 'profile.created') return;
-    const payload = parse(profileCreatedSchema, event.payload);
+    const payload = parse(
+      eventPayloadSchemas['profile.created'],
+      event.payload,
+    );
     const updated = await tx.query(
       `WITH activated AS (
          UPDATE auth_identities SET state = 'active', activated_at = COALESCE(activated_at, NOW())
